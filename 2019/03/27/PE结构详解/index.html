@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.4.2" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.2" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.4.2',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="0x00：前言PE文件可以说是在逆向的各个领域都有涉及，特别是病毒领域，如果你是一名病毒制造者，那你肯定是对PE文件有详细的了解，那么这里我就详细介绍一下PE文件，最后我们用C来写一个PE格式解析器。 0x01：PE格式总体介绍首先说明一个概念，可执行文件(Executable File)是指可以由操作系统直接加载执行的文件，在Windows操作系统中可执行文件就是PE文件结构，在Linux下则是">
+<meta name="keywords" content="PE文件">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PE结构详解">
+<meta property="og:url" content="http://yoursite.com/2019/03/27/PE结构详解/index.html">
+<meta property="og:site_name" content="Thunder_J">
+<meta property="og:description" content="0x00：前言PE文件可以说是在逆向的各个领域都有涉及，特别是病毒领域，如果你是一名病毒制造者，那你肯定是对PE文件有详细的了解，那么这里我就详细介绍一下PE文件，最后我们用C来写一个PE格式解析器。 0x01：PE格式总体介绍首先说明一个概念，可执行文件(Executable File)是指可以由操作系统直接加载执行的文件，在Windows操作系统中可执行文件就是PE文件结构，在Linux下则是">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/1.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/2.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/3.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/4.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/5.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/6.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/7.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/8.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/9.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/10.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/11.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/12.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/13.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/03/27/PE结构详解/14.jpg">
+<meta property="og:updated_time" content="2019-03-30T02:55:36.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="PE结构详解">
+<meta name="twitter:description" content="0x00：前言PE文件可以说是在逆向的各个领域都有涉及，特别是病毒领域，如果你是一名病毒制造者，那你肯定是对PE文件有详细的了解，那么这里我就详细介绍一下PE文件，最后我们用C来写一个PE格式解析器。 0x01：PE格式总体介绍首先说明一个概念，可执行文件(Executable File)是指可以由操作系统直接加载执行的文件，在Windows操作系统中可执行文件就是PE文件结构，在Linux下则是">
+<meta name="twitter:image" content="http://yoursite.com/2019/03/27/PE结构详解/1.jpg">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Thunder_J" type="application/atom+xml">
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/03/27/PE结构详解/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>PE结构详解 | Thunder_J</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+<a href="https://your-url" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewbox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Thunder_J</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">Just for fun</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/03/27/PE结构详解/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Thunder_J">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Thunder_J">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">PE结构详解
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+		
+		
+
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-03-27 17:05:41" itemprop="dateCreated datePublished" datetime="2019-03-27T17:05:41+08:00">2019-03-27</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-03-30 10:55:36" itemprop="dateModified" datetime="2019-03-30T10:55:36+08:00">2019-03-30</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/开发/" itemprop="url" rel="index"><span itemprop="name">开发</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/开发/Windows工具/" itemprop="url" rel="index"><span itemprop="name">Windows工具</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             阅读次数： 
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">19k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">18 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="0x00：前言"><a href="#0x00：前言" class="headerlink" title="0x00：前言"></a>0x00：前言</h1><p>PE文件可以说是在逆向的各个领域都有涉及，特别是病毒领域，如果你是一名病毒制造者，那你肯定是对PE文件有详细的了解，那么这里我就详细介绍一下PE文件，最后我们用C来写一个PE格式解析器。</p>
+<h1 id="0x01：PE格式"><a href="#0x01：PE格式" class="headerlink" title="0x01：PE格式"></a>0x01：PE格式</h1><h2 id="总体介绍"><a href="#总体介绍" class="headerlink" title="总体介绍"></a>总体介绍</h2><p>首先说明一个概念，可执行文件(Executable File)是指可以由操作系统直接加载执行的文件，在Windows操作系统中可执行文件就是PE文件结构，在Linux下则是ELF文件，我们这里只讨论Windows下的PE文件，要了解PE文件，首先要知道PE格式，那么什么是PE格式呢，既然是一个格式，那肯定是我们都需要遵循的定理，下面这张图就是PE文件格式的图片(来自看雪)，非常大一张图片，其实PE格式就是各种结构体的结合，Windows下PE文件的各种结构体在WinNT.h这个头文件中，可以在VS中查询。</p>
+<p><img src="/2019/03/27/PE结构详解/1.jpg" alt="1"></p>
+<h2 id="PE文件整体结构"><a href="#PE文件整体结构" class="headerlink" title="PE文件整体结构"></a>PE文件整体结构</h2><p>PE结构可以大致分为:</p>
+<ul>
+<li>DOS部分</li>
+<li>PE文件头</li>
+<li>节表(块表)</li>
+<li>节数据(块数据)</li>
+<li>调试信息</li>
+</ul>
+<h2 id="PE指纹"><a href="#PE指纹" class="headerlink" title="PE指纹"></a>PE指纹</h2><p>为了更加直观的描述我们用16进制编辑器直接将一个exe文件载入，分析其结构，首先我们需要清楚的概念是PE指纹，也就是判断一个文件是否是PE文件的依据，首先是根据文件的前两个字节是否为4D 5A，也就是’MZ’，然后看第四排四个字节指向的地址00 00 00 f8是否为50 45，也就是’PE’，满足这两个条件也就满足了PE文件的格式，简称PE指纹，在后面制作解析器的时候会通过它来判断是否为一个有效的PE文件。</p>
+<p><img src="/2019/03/27/PE结构详解/2.jpg" alt="2"></p>
+<h2 id="DOS部分"><a href="#DOS部分" class="headerlink" title="DOS部分"></a>DOS部分</h2><p>DOS部分主要是为了兼容以前的DOS系统，DOS部分可以分为DOS MZ文件头(IMAGE_DOS_HEADER)和DOS块(DOS Stub)组成，PE文件的第一个字节位于一个传统的MS-DOS头部，称作IMAGE_DOS_HEADER，其结构如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_DOS_HEADER</span> &#123;</span>      <span class="comment">// DOS .EXE header</span></span><br><span class="line">    WORD   e_magic;                     <span class="comment">// Magic number</span></span><br><span class="line">    WORD   e_cblp;                      <span class="comment">// Bytes on last page of file</span></span><br><span class="line">    WORD   e_cp;                        <span class="comment">// Pages in file</span></span><br><span class="line">    WORD   e_crlc;                      <span class="comment">// Relocations</span></span><br><span class="line">    WORD   e_cparhdr;                   <span class="comment">// Size of header in paragraphs</span></span><br><span class="line">    WORD   e_minalloc;                  <span class="comment">// Minimum extra paragraphs needed</span></span><br><span class="line">    WORD   e_maxalloc;                  <span class="comment">// Maximum extra paragraphs needed</span></span><br><span class="line">    WORD   e_ss;                        <span class="comment">// Initial (relative) SS value</span></span><br><span class="line">    WORD   e_sp;                        <span class="comment">// Initial SP value</span></span><br><span class="line">    WORD   e_csum;                      <span class="comment">// Checksum</span></span><br><span class="line">    WORD   e_ip;                        <span class="comment">// Initial IP value</span></span><br><span class="line">    WORD   e_cs;                        <span class="comment">// Initial (relative) CS value</span></span><br><span class="line">    WORD   e_lfarlc;                    <span class="comment">// File address of relocation table</span></span><br><span class="line">    WORD   e_ovno;                      <span class="comment">// Overlay number</span></span><br><span class="line">    WORD   e_res[<span class="number">4</span>];                    <span class="comment">// Reserved words</span></span><br><span class="line">    WORD   e_oemid;                     <span class="comment">// OEM identifier (for e_oeminfo)</span></span><br><span class="line">    WORD   e_oeminfo;                   <span class="comment">// OEM information; e_oemid specific</span></span><br><span class="line">    WORD   e_res2[<span class="number">10</span>];                  <span class="comment">// Reserved words</span></span><br><span class="line">    LONG   e_lfanew;                    <span class="comment">// File address of new exe header</span></span><br><span class="line">  &#125; IMAGE_DOS_HEADER, *PIMAGE_DOS_HEADER;</span><br></pre></td></tr></table></figure></p>
+<p>DOS部分我们需要熟悉的是e_magic成员和e_lfanew成员，前者是标识PE指纹的一部分，后者则是寻找PE文件头的部分，除了这两个成员，其他成员全部用0填充都不会影响程序正常运行，所以我们不需要过多的对其他部分深究，DOS部分在16进制编辑器中看就是下图的部分：</p>
+<p><img src="/2019/03/27/PE结构详解/3.jpg" alt="3"></p>
+<p>我们可以看到e_lfanew指向PE文件头，我们可以通过它来寻找PE文件头，而DOS块的部分自然就是PE文件头和DOS MZ文件头中间的部分，这部分是由链接器所写入的，可以随意进行修改，并不影响程序的运行：</p>
+<p><img src="/2019/03/27/PE结构详解/4.jpg" alt="4"></p>
+<h2 id="PE文件头"><a href="#PE文件头" class="headerlink" title="PE文件头"></a>PE文件头</h2><p>PE文件头由PE文件头标志，标准PE头，扩展PE头三部分组成。PE文件头标志自然是50 40 00 00，也就是’PE’，我们从结构体的角度看一下PE文件头的详细信息<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_NT_HEADERS</span> &#123;</span></span><br><span class="line">    DWORD Signature; 						<span class="comment">//PE文件头标志 =&gt; 4字节</span></span><br><span class="line">    IMAGE_FILE_HEADER FileHeader; 			<span class="comment">//标准PE头 =&gt; 20字节</span></span><br><span class="line">    IMAGE_OPTIONAL_HEADER32 OptionalHeader; <span class="comment">//扩展PE头 =&gt; 32位下224字节(0xE0) 64位下240字节(0xF0)</span></span><br><span class="line">&#125; IMAGE_NT_HEADERS32, *PIMAGE_NT_HEADERS32;</span><br></pre></td></tr></table></figure></p>
+<p>标准PE头结构如下，有20个字节，我们可以从PE文件头标志后20个字节找到它<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_FILE_HEADER</span> &#123;</span></span><br><span class="line">    WORD    Machine; 				<span class="comment">//可以运行在什么平台上 任意:0 ,Intel 386以及后续:14C x64:8664</span></span><br><span class="line">    WORD    NumberOfSections; 		<span class="comment">//节的数量</span></span><br><span class="line">    DWORD   TimeDateStamp; 			<span class="comment">//编译器填写的时间戳</span></span><br><span class="line">    DWORD   PointerToSymbolTable;   <span class="comment">//调试相关</span></span><br><span class="line">    DWORD   NumberOfSymbols; 		<span class="comment">//调试相关</span></span><br><span class="line">    WORD    SizeOfOptionalHeader;   <span class="comment">//标识扩展PE头大小</span></span><br><span class="line">    WORD    Characteristics;        <span class="comment">//文件属性 =&gt; 16进制转换为2进制根据哪些位有1,可以查看相关属性</span></span><br><span class="line">&#125; IMAGE_FILE_HEADER, *PIMAGE_FILE_HEADER;</span><br></pre></td></tr></table></figure></p>
+<p>扩展PE头在32位和64位系统上大小是不同的，在32位系统上有224个字节，16进制就是0xE0，结构如下，重要的属性我都有标注<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_OPTIONAL_HEADER</span> &#123;</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// Standard fields.</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line"></span><br><span class="line">    WORD    Magic;						<span class="comment">//PE32: 10B PE64: 20B</span></span><br><span class="line">    BYTE    MajorLinkerVersion;</span><br><span class="line">    BYTE    MinorLinkerVersion;</span><br><span class="line">    DWORD   SizeOfCode;					<span class="comment">//所有含有代码的区块的大小 编译器填入 没用(可改)</span></span><br><span class="line">    DWORD   SizeOfInitializedData;		<span class="comment">//所有初始化数据区块的大小 编译器填入 没用(可改)</span></span><br><span class="line">    DWORD   SizeOfUninitializedData;	<span class="comment">//所有含未初始化数据区块的大小 编译器填入 没用(可改)</span></span><br><span class="line">    DWORD   AddressOfEntryPoint;		<span class="comment">//程序入口RVA</span></span><br><span class="line">    DWORD   BaseOfCode;					<span class="comment">//代码区块起始RVA</span></span><br><span class="line">    DWORD   BaseOfData;					<span class="comment">//数据区块起始RVA</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// NT additional fields.</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line"></span><br><span class="line">    DWORD   ImageBase;						<span class="comment">//内存镜像基址(程序默认载入基地址)</span></span><br><span class="line">    DWORD   SectionAlignment; 				<span class="comment">//内存中对齐大小</span></span><br><span class="line">    DWORD   FileAlignment; 					<span class="comment">//文件中对齐大小(提高程序运行效率)</span></span><br><span class="line">    WORD    MajorOperatingSystemVersion;</span><br><span class="line">    WORD    MinorOperatingSystemVersion;</span><br><span class="line">    WORD    MajorImageVersion;</span><br><span class="line">    WORD    MinorImageVersion;</span><br><span class="line">    WORD    MajorSubsystemVersion;</span><br><span class="line">    WORD    MinorSubsystemVersion;</span><br><span class="line">    DWORD   Win32VersionValue;</span><br><span class="line">    DWORD   SizeOfImage;					<span class="comment">//内存中整个PE文件的映射的尺寸,可比实际值大,必须是SectionAlignment的整数倍</span></span><br><span class="line">    DWORD   SizeOfHeaders; 					<span class="comment">//所有的头加上节表文件对齐之后的值</span></span><br><span class="line">    DWORD   CheckSum;						<span class="comment">//映像校验和,一些系统.dll文件有要求,判断是否被修改</span></span><br><span class="line">    WORD    Subsystem;						</span><br><span class="line">    WORD    DllCharacteristics;				<span class="comment">//文件特性,不是针对DLL文件的,16进制转换2进制可以根据属性对应的表格得到相应的属性</span></span><br><span class="line">    DWORD   SizeOfStackReserve;</span><br><span class="line">    DWORD   SizeOfStackCommit;</span><br><span class="line">    DWORD   SizeOfHeapReserve;</span><br><span class="line">    DWORD   SizeOfHeapCommit;</span><br><span class="line">    DWORD   LoaderFlags;</span><br><span class="line">    DWORD   NumberOfRvaAndSizes;</span><br><span class="line">    IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES]; <span class="comment">//数据目录表,结构体数组</span></span><br><span class="line">&#125; IMAGE_OPTIONAL_HEADER32, *PIMAGE_OPTIONAL_HEADER32;</span><br></pre></td></tr></table></figure></p>
+<p>程序中的扩展PE头大小在标准PE头中的显示如下图</p>
+<p><img src="/2019/03/27/PE结构详解/5.jpg" alt="5"></p>
+<p>扩展PE头在程序中显示如下，每一个属性可以通过偏移找到</p>
+<p><img src="/2019/03/27/PE结构详解/6.jpg" alt="6"></p>
+<p>还需要知道的是，程序的真正入口点 = ImageBase + AddressOfEntryPoint</p>
+<h2 id="节表"><a href="#节表" class="headerlink" title="节表"></a>节表</h2><p>节表的结构如下，整体为40个字节<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_SECTION_HEADER</span> &#123;</span></span><br><span class="line">    BYTE    Name[IMAGE_SIZEOF_SHORT_NAME]; <span class="comment">//ASCII字符串 可自定义 只截取8个字节</span></span><br><span class="line">    <span class="keyword">union</span> &#123;								   <span class="comment">//该节在没有对齐之前的真实尺寸,该值可以不准确</span></span><br><span class="line">            DWORD   PhysicalAddress;</span><br><span class="line">            DWORD   VirtualSize;</span><br><span class="line">    &#125; Misc;</span><br><span class="line">    DWORD   VirtualAddress; 			   <span class="comment">//内存中的偏移地址</span></span><br><span class="line">    DWORD   SizeOfRawData;				   <span class="comment">//节在文件中对齐的尺寸</span></span><br><span class="line">    DWORD   PointerToRawData;			   <span class="comment">//节区在文件中的偏移</span></span><br><span class="line">    DWORD   PointerToRelocations;</span><br><span class="line">    DWORD   PointerToLinenumbers;</span><br><span class="line">    WORD    NumberOfRelocations;</span><br><span class="line">    WORD    NumberOfLinenumbers;</span><br><span class="line">    DWORD   Characteristics;			   <span class="comment">//节的属性</span></span><br><span class="line">&#125; IMAGE_SECTION_HEADER, *PIMAGE_SECTION_HEADER;</span><br></pre></td></tr></table></figure></p>
+<p>程序中显示如下</p>
+<p><img src="/2019/03/27/PE结构详解/7.jpg" alt="7"></p>
+<p>值得注意的是扩展PE头中的 FileAlignment 以及 SizeOfHeaders 这两个成员，SizeOfHeaders 表示所有的头加上节表文件对齐之后的值，对齐的大小参考的就是 FileAlignment 成员，如果所有的头加上节表的大小为320，FileAlignment 为 200，那么 SizeOfHeaders 大小就为 400，因为是根据FileAlignment 对齐的，这种对齐虽然牺牲了空间，但是可以提高程序运行效率，下图中的前面部分0x00100000就是程序在内存中对齐的大小，也就是程序运行起来时对齐的大小，0x00000400是程序在文件中的对齐大小，也就是没有运行时对齐的大小，需要清楚的是，PE程序在运行时内存中的对齐值和没有运行时的对齐值可能是截然不同的，了解这一点这对我们后面写PE解析器有帮助。</p>
+<p><img src="/2019/03/27/PE结构详解/8.jpg" alt="8"></p>
+<h2 id="导入表"><a href="#导入表" class="headerlink" title="导入表"></a>导入表</h2><p>导出表(Import Table)和导入表是靠 IMAGE_DATA_DIRECTORY 这个结构体数组来寻找的，IMAGE_DATA_DIRECTORY 的结构如下<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_DATA_DIRECTORY</span> &#123;</span></span><br><span class="line">    DWORD   VirtualAddress;</span><br><span class="line">    DWORD   Size;</span><br><span class="line">&#125; IMAGE_DATA_DIRECTORY, *PIMAGE_DATA_DIRECTORY;</span><br></pre></td></tr></table></figure></p>
+<p>在程序中查找导出表如下图所示，因为结构体数组中每一个结构体大小为 16 位，又是扩展PE头中的最后一个成员，所以我们从节表段向上推 8 行即为我们的结构体数组开头，前 8 位是导出表的内容，因为是一个exe文件，这里刚好就没有导出表只有导入表，可以看到导入表RVA地址是0x00003700的位置</p>
+<p><img src="/2019/03/27/PE结构详解/9.jpg" alt="9"></p>
+<p>导入表的结构如下<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_IMPORT_DESCRIPTOR</span> &#123;</span></span><br><span class="line">    <span class="keyword">union</span> &#123;</span><br><span class="line">        DWORD   Characteristics;            <span class="comment">// 0 for terminating null import descriptor</span></span><br><span class="line">        DWORD   OriginalFirstThunk;         <span class="comment">// RVA 指向 INT (PIMAGE_THUNK_DATA结构数组)</span></span><br><span class="line">    &#125; DUMMYUNIONNAME;</span><br><span class="line">    DWORD   TimeDateStamp;                  <span class="comment">// 0 if not bound,</span></span><br><span class="line">                                            <span class="comment">// -1 if bound, and real date\time stamp</span></span><br><span class="line">                                            <span class="comment">//     in IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT (new BIND)</span></span><br><span class="line">                                            <span class="comment">// O.W. date/time stamp of DLL bound to (Old BIND)</span></span><br><span class="line"></span><br><span class="line">    DWORD   ForwarderChain;                 <span class="comment">// -1 if no forwarders</span></span><br><span class="line">    DWORD   Name;							<span class="comment">//RVA指向dll名字,以0结尾</span></span><br><span class="line">    DWORD   FirstThunk;                     <span class="comment">// RVA 指向 IAT (PIMAGE_THUNK_DATA结构数组)</span></span><br><span class="line">&#125; IMAGE_IMPORT_DESCRIPTOR;</span><br><span class="line"><span class="keyword">typedef</span> IMAGE_IMPORT_DESCRIPTOR UNALIGNED *PIMAGE_IMPORT_DESCRIPTOR;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到，OriginalFirstThunk 和 FirstThunk 指向的内容分别是 INT 和 IAT ，但实际上 INT 和 IAT 的内容是一样的，所以他们指向的内容是一样的，只是方式不同而已，下图可以完美的解释</p>
+<p><img src="/2019/03/27/PE结构详解/10.jpg" alt="10"></p>
+<p>但是上图只是PE文件加载前的情况，PE文件一旦运行起来，就会变成下图的情况</p>
+<p><img src="/2019/03/27/PE结构详解/11.jpg" alt="11"></p>
+<p>我们还需要了解的结构体是 IMAGE_THUNK_DATA 和 IMAGE_IMPORT_BY_NAME 结构如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_IMPORT_BY_NAME</span> &#123;</span></span><br><span class="line">    WORD    Hint; <span class="comment">//可能为空,编译器决定,如果不为空,是函数在导出表的索引</span></span><br><span class="line">    BYTE    Name[<span class="number">1</span>]; <span class="comment">//函数名称,以0结尾</span></span><br><span class="line">&#125; IMAGE_IMPORT_BY_NAME, *PIMAGE_IMPORT_BY_NAME;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"pshpack8.h"</span>                       <span class="comment">// Use align 8 for the 64-bit IAT.</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_THUNK_DATA64</span> &#123;</span></span><br><span class="line">    <span class="keyword">union</span> &#123;</span><br><span class="line">        ULONGLONG ForwarderString;  <span class="comment">// 指向一个转向者字符串的RVA</span></span><br><span class="line">        ULONGLONG Function;         <span class="comment">// 被输入的函数的内存地址</span></span><br><span class="line">        ULONGLONG Ordinal;			<span class="comment">// 被输入API的序数值</span></span><br><span class="line">        ULONGLONG AddressOfData;    <span class="comment">// 指针指向 IMAGE_IMPORT_BY_NAME</span></span><br><span class="line">    &#125; u1;</span><br><span class="line">&#125; IMAGE_THUNK_DATA64;</span><br><span class="line"><span class="keyword">typedef</span> IMAGE_THUNK_DATA64 * PIMAGE_THUNK_DATA64;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"poppack.h"</span>                        <span class="comment">// Back to 4 byte packing</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_THUNK_DATA32</span> &#123;</span></span><br><span class="line">    <span class="keyword">union</span> &#123;</span><br><span class="line">        DWORD ForwarderString;      <span class="comment">// PBYTE </span></span><br><span class="line">        DWORD Function;             <span class="comment">// PDWORD</span></span><br><span class="line">        DWORD Ordinal;</span><br><span class="line">        DWORD AddressOfData;        <span class="comment">// PIMAGE_IMPORT_BY_NAME</span></span><br><span class="line">    &#125; u1;</span><br><span class="line">&#125; IMAGE_THUNK_DATA32;</span><br><span class="line"><span class="keyword">typedef</span> IMAGE_THUNK_DATA32 * PIMAGE_THUNK_DATA32;</span><br></pre></td></tr></table></figure>
+<p>其实他们的作用很明显，就是用来寻找当前的模块依赖哪些函数，可以用这几个结构体求到依赖函数的名字。</p>
+<h2 id="导出表"><a href="#导出表" class="headerlink" title="导出表"></a>导出表</h2><p>导出表(Export Table)一般是DLL文件用的比较多，exe文件很少有导出表，导出表的数据结构如下<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_EXPORT_DIRECTORY</span> &#123;</span></span><br><span class="line">    DWORD   Characteristics;</span><br><span class="line">    DWORD   TimeDateStamp;</span><br><span class="line">    WORD    MajorVersion;</span><br><span class="line">    WORD    MinorVersion;</span><br><span class="line">    DWORD   Name;					<span class="comment">// 指针指向该导出表文件名字符串</span></span><br><span class="line">    DWORD   Base;					<span class="comment">// 导出函数起始序号</span></span><br><span class="line">    DWORD   NumberOfFunctions;		<span class="comment">// 所有导出函数的个数</span></span><br><span class="line">    DWORD   NumberOfNames;			<span class="comment">// 以函数名字导出的函数个数</span></span><br><span class="line">    DWORD   AddressOfFunctions;     <span class="comment">// 指针指向导出函数地址表RVA</span></span><br><span class="line">    DWORD   AddressOfNames;         <span class="comment">// 指针指向导出函数名称表RVA</span></span><br><span class="line">    DWORD   AddressOfNameOrdinals;  <span class="comment">// 指针指向导出函数序号表RVA</span></span><br><span class="line">&#125; IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到导出表里面最后还有三个表，这三个表可以让我们找到函数真正的地址，在编写PE格式解析器的时候可以用到，AddressOfFunctions 是函数地址表，指向每个函数真正的地址，AddressOfNames 和 AddressOfNameOrdinals 分别是函数名称表和函数序号表，我们知道DLL文件有两种调用方式，一种是用名字，一种是用序号，通过这两个表可以用来寻找函数在 AddressOfFunctions 表中真正的地址。</p>
+<h2 id="重定位表"><a href="#重定位表" class="headerlink" title="重定位表"></a>重定位表</h2><p>当PE文件被装载到虚拟内存的另一个地址中的时候，也就是载入时不将默认的值作为基地址载入，链接器登记的哪个地址是错误的，需要我们用重定位表来调整，重定位表在数据目录项的第 6 个结构，结构如下<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_BASE_RELOCATION</span> &#123;</span></span><br><span class="line">    DWORD   VirtualAddress; <span class="comment">// 重定位数据的开始 RVA 地址</span></span><br><span class="line">    DWORD   SizeOfBlock;	<span class="comment">// 重定位块的长度</span></span><br><span class="line"><span class="comment">//  WORD    TypeOffset[1];	// 重定位项数组</span></span><br><span class="line">&#125; IMAGE_BASE_RELOCATION;</span><br><span class="line"><span class="keyword">typedef</span> IMAGE_BASE_RELOCATION UNALIGNED * PIMAGE_BASE_RELOCATION;</span><br></pre></td></tr></table></figure></p>
+<p>重定位表有许多个，以八个字节的 0 结尾</p>
+<h1 id="0x02：PE解析器编写"><a href="#0x02：PE解析器编写" class="headerlink" title="0x02：PE解析器编写"></a>0x02：PE解析器编写</h1><p>这里放一个由C写的简易的PE分析工具，写的比较简单，主要是为了熟悉PE结构，代码我也传到了GitHub上面，需要的可以自行下载。</p>
+<h2 id="下载链接"><a href="#下载链接" class="headerlink" title="下载链接"></a>下载链接</h2><p><a href="https://github.com/ThunderJie/Code/tree/master/PE" target="_blank" rel="noopener">https://github.com/ThunderJie/Code/tree/master/PE</a><br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;windows.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">DWORD <span class="title">RVAOffset</span><span class="params">(PIMAGE_NT_HEADERS pNtHeader, DWORD Rva)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	PIMAGE_SECTION_HEADER pSectionHeader = (PIMAGE_SECTION_HEADER)IMAGE_FIRST_SECTION(pNtHeader);</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; pNtHeader-&gt;FileHeader.NumberOfSections; i++)</span><br><span class="line">	&#123;</span><br><span class="line">		DWORD SectionBeginRva = pSectionHeader[i].VirtualAddress;</span><br><span class="line"></span><br><span class="line">		DWORD SectionEndRva = pSectionHeader[i].VirtualAddress + pSectionHeader[i].SizeOfRawData;</span><br><span class="line">		<span class="keyword">if</span> (Rva &gt;= SectionBeginRva &amp;&amp; Rva &lt;= SectionEndRva)</span><br><span class="line">		&#123;</span><br><span class="line">			DWORD Temp = Rva - SectionBeginRva;</span><br><span class="line">			DWORD Rwa = Temp + pSectionHeader[i].PointerToRawData;</span><br><span class="line">			<span class="keyword">return</span> Rwa;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	HANDLE hFile;</span><br><span class="line">	HANDLE hMapping;</span><br><span class="line">	LPVOID ImageBase;</span><br><span class="line">	<span class="keyword">char</span> szFilePath[MAX_PATH];</span><br><span class="line">	OPENFILENAME ofn;<span class="comment">//定义结构，调用打开对话框选择要分析的文件及其保存路径</span></span><br><span class="line">	PIMAGE_DOS_HEADER  pDH = <span class="literal">NULL</span>;<span class="comment">//指向IMAGE_DOS结构的指针</span></span><br><span class="line">	PIMAGE_NT_HEADERS  pNtH = <span class="literal">NULL</span>;<span class="comment">//指向IMAGE_NT结构的指针</span></span><br><span class="line">	PIMAGE_FILE_HEADER pFH = <span class="literal">NULL</span>;<span class="comment">//指向IMAGE_FILE结构的指针</span></span><br><span class="line">	PIMAGE_OPTIONAL_HEADER pOH = <span class="literal">NULL</span>;<span class="comment">//指向IMAGE_OPTIONALE结构的指针</span></span><br><span class="line"></span><br><span class="line">	<span class="built_in">memset</span>(szFilePath, <span class="number">0</span>, MAX_PATH);</span><br><span class="line">	<span class="built_in">memset</span>(&amp;ofn, <span class="number">0</span>, <span class="keyword">sizeof</span>(ofn));</span><br><span class="line"></span><br><span class="line">	ofn.lStructSize = <span class="keyword">sizeof</span>(ofn);</span><br><span class="line">	ofn.hwndOwner = <span class="literal">NULL</span>;</span><br><span class="line">	ofn.hInstance = GetModuleHandle(<span class="literal">NULL</span>);</span><br><span class="line">	ofn.nMaxFile = MAX_PATH;</span><br><span class="line">	ofn.lpstrInitialDir = <span class="string">"."</span>;</span><br><span class="line">	ofn.lpstrFile = szFilePath;</span><br><span class="line">	ofn.lpstrTitle = <span class="string">"choose a PE file --by Thunder_J"</span>;</span><br><span class="line">	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;</span><br><span class="line">	ofn.lpstrFilter = <span class="string">"*.*\0*.*\0"</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!GetOpenFileName(&amp;ofn))</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"打开文件错误:%d\n"</span>, GetLastError());</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	hFile = CreateFile(szFilePath, GENERIC_READ, FILE_SHARE_READ, <span class="literal">NULL</span>, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, <span class="number">0</span>);</span><br><span class="line">	<span class="keyword">if</span> (!hFile)</span><br><span class="line">	&#123;</span><br><span class="line">		MessageBox(<span class="literal">NULL</span>, <span class="string">"打开文件错误"</span>, <span class="literal">NULL</span>, MB_OK);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	hMapping = CreateFileMapping(hFile, <span class="literal">NULL</span>, PAGE_READONLY, <span class="number">0</span>, <span class="number">0</span>, <span class="literal">NULL</span>);</span><br><span class="line">	<span class="keyword">if</span> (!hMapping)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"创建映射错误:%d"</span>, GetLastError());</span><br><span class="line">		CloseHandle(hFile);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	ImageBase = MapViewOfFile(hMapping, FILE_MAP_READ, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">	<span class="keyword">if</span> (!ImageBase)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"文件映射错误:%d"</span>, GetLastError());</span><br><span class="line">		CloseHandle(hMapping);</span><br><span class="line">		CloseHandle(hFile);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">/************************************************************************/</span></span><br><span class="line">	<span class="comment">/*							  PE头的判断                                 */</span></span><br><span class="line">	<span class="comment">/************************************************************************/</span></span><br><span class="line">	<span class="keyword">if</span> (!ImageBase) <span class="comment">//判断映像地址</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Not a valid PE file 1!\n"</span>);</span><br><span class="line">		CloseHandle(hMapping);</span><br><span class="line">		CloseHandle(hFile);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"--------------------PEheader------------------------\n"</span>);</span><br><span class="line">	pDH = (PIMAGE_DOS_HEADER)ImageBase;</span><br><span class="line">	<span class="keyword">if</span> (pDH-&gt;e_magic!=IMAGE_DOS_SIGNATURE) <span class="comment">//判断是否为MZ</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Not a valid PE file 2!\n"</span>);</span><br><span class="line">		CloseHandle(hMapping);</span><br><span class="line">		CloseHandle(hFile);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	pNtH = (PIMAGE_NT_HEADERS)((DWORD)pDH + pDH-&gt;e_lfanew); <span class="comment">//判断是否为PE格式</span></span><br><span class="line">	<span class="keyword">if</span> (pNtH-&gt;Signature!=IMAGE_NT_SIGNATURE)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"Not a valid PE file 3!\n"</span>);</span><br><span class="line">		CloseHandle(hMapping);</span><br><span class="line">		CloseHandle(hFile);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"PE e_lfanew is: 0x%x\n"</span>, pNtH);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/************************************************************************/</span></span><br><span class="line">	<span class="comment">/*							  FileHeader                                */</span></span><br><span class="line">	<span class="comment">/************************************************************************/</span></span><br><span class="line">	pFH = &amp;pNtH-&gt;FileHeader;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"-----------------FileHeader------------------------\n"</span>);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"NumberOfSections: %d\n"</span>, pFH-&gt;NumberOfSections);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"SizeOfOptionalHeader: %d\n"</span>, pFH-&gt;SizeOfOptionalHeader);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/************************************************************************/</span></span><br><span class="line">	<span class="comment">/*							  OptionalHeader                            */</span></span><br><span class="line">	<span class="comment">/************************************************************************/</span></span><br><span class="line">	pOH = &amp;pNtH-&gt;OptionalHeader;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"-----------------OptionalHeader---------------------\n"</span>);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"SizeOfCode:0x%08x\n"</span>, pOH-&gt;SizeOfCode);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"AddressOfEntryPoint: 0x%08X\n"</span>, pOH-&gt;AddressOfEntryPoint);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"ImageBase is 0x%x\n"</span>, ImageBase);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"SectionAlignment: 0x%08x\n"</span>, pOH-&gt;SectionAlignment);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"FileAlignment: 0x%08x\n"</span>, pOH-&gt;FileAlignment);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"SizeOfImage: 0x%08x\n"</span>, pOH-&gt;SizeOfImage);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"SizeOfHeaders: 0x%08x\n"</span>, pOH-&gt;SizeOfHeaders);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"NumberOfRvaAndSizes: 0x%08x\n"</span>, pOH-&gt;NumberOfRvaAndSizes);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/************************************************************************/</span></span><br><span class="line">	<span class="comment">/*							  SectionTable                              */</span></span><br><span class="line">	<span class="comment">/************************************************************************/</span></span><br><span class="line">	<span class="keyword">int</span> SectionNumber = <span class="number">0</span>;</span><br><span class="line">	DWORD SectionHeaderOffset = (DWORD)pNtH + <span class="number">24</span> + (DWORD)pFH-&gt;SizeOfOptionalHeader; <span class="comment">//节表位置的计算</span></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"--------------------SectionTable---------------------\n"</span>);</span><br><span class="line">	<span class="keyword">for</span> (SectionNumber; SectionNumber &lt; pFH-&gt;NumberOfSections;SectionNumber++)</span><br><span class="line">	&#123;</span><br><span class="line">		PIMAGE_SECTION_HEADER pSh = (PIMAGE_SECTION_HEADER)(SectionHeaderOffset + <span class="number">40</span> * SectionNumber);</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"%d 's Name is %s\n"</span>, SectionNumber + <span class="number">1</span>, pSh-&gt;Name);</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"VirtualAddress: 0x%08X\n"</span>, (DWORD)pSh-&gt;VirtualAddress);</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"SizeOfRawData: 0x%08X\n"</span>, (DWORD)pSh-&gt;SizeOfRawData);</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"PointerToRawData: 0x%08X\n"</span>, (DWORD)pSh-&gt;PointerToRawData);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">/************************************************************************/</span></span><br><span class="line">	<span class="comment">/*							  ExportTable                               */</span></span><br><span class="line">	<span class="comment">/************************************************************************/</span></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"--------------------ExportTable----------------------\n"</span>);</span><br><span class="line">	DWORD Export_table_offset = RVAOffset(pNtH, (DWORD)pNtH-&gt;OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress);</span><br><span class="line">	PIMAGE_EXPORT_DIRECTORY pExportDirectory = (PIMAGE_EXPORT_DIRECTORY)((DWORD)ImageBase + Export_table_offset);</span><br><span class="line">	DWORD EXport_table_offset_Name = (DWORD)ImageBase + RVAOffset(pNtH, pExportDirectory-&gt;Name);</span><br><span class="line">	DWORD * pNameOfAddress = (DWORD *)((DWORD)ImageBase + RVAOffset(pNtH, pExportDirectory-&gt;AddressOfNames));</span><br><span class="line">	DWORD * pFunctionOfAdress = (DWORD *)((DWORD)ImageBase + RVAOffset(pNtH, pExportDirectory-&gt;AddressOfFunctions));</span><br><span class="line">	WORD * pNameOrdinalOfAddress = (WORD *)((DWORD)ImageBase + RVAOffset(pNtH, pExportDirectory-&gt;AddressOfNameOrdinals));</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"Name:%s\n"</span>, EXport_table_offset_Name);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"NameOfAddress:%08X\n"</span>, RVAOffset(pNtH, pExportDirectory-&gt;AddressOfNames));</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"FunctionOfAdress:%08X\n"</span>, RVAOffset(pNtH, pExportDirectory-&gt;AddressOfFunctions));</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"NameOrdinalOfAddress:%08X\n"</span>, RVAOffset(pNtH, pExportDirectory-&gt;AddressOfNameOrdinals));</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (pExportDirectory-&gt;NumberOfFunctions == <span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">puts</span>(<span class="string">"!!!!!!!!!!!!!!!!!NO EXPORT!!!!!!!!!!!!!!!!!!!!!"</span>);</span><br><span class="line">		<span class="keyword">if</span> (hFile != INVALID_HANDLE_VALUE)</span><br><span class="line">		&#123;</span><br><span class="line">			CloseHandle(hFile);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (hMapping != <span class="literal">NULL</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			CloseHandle(hMapping);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (ImageBase != <span class="literal">NULL</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			UnmapViewOfFile(ImageBase);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"NumberOfNames:%d\n"</span>, pExportDirectory-&gt;NumberOfNames);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"NumberOfFunctions:%d\n"</span>, pExportDirectory-&gt;NumberOfFunctions);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/************************************************************************/</span></span><br><span class="line">	<span class="comment">/*							  ImportTable                               */</span></span><br><span class="line">	<span class="comment">/************************************************************************/</span></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">"--------------------ImportTable----------------------\n"</span>);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">int</span> cont = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">do</span></span><br><span class="line">	&#123;</span><br><span class="line">		DWORD dwImportOffset = RVAOffset(pNtH, pNtH-&gt;OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);</span><br><span class="line">		dwImportOffset = dwImportOffset + cont;</span><br><span class="line">		PIMAGE_IMPORT_DESCRIPTOR pImport = (PIMAGE_IMPORT_DESCRIPTOR)((DWORD)ImageBase + dwImportOffset);</span><br><span class="line">		<span class="keyword">if</span> (pImport-&gt;OriginalFirstThunk == <span class="number">0</span> &amp;&amp; pImport-&gt;TimeDateStamp == <span class="number">0</span> &amp;&amp; pImport-&gt;ForwarderChain == <span class="number">0</span> &amp;&amp; pImport-&gt;Name == <span class="number">0</span> &amp;&amp; pImport-&gt;FirstThunk == <span class="number">0</span>)</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		DWORD dwOriginalFirstThunk = (DWORD)ImageBase + RVAOffset(pNtH, pImport-&gt;OriginalFirstThunk);</span><br><span class="line">		DWORD dwFirstThunk = (DWORD)ImageBase + RVAOffset(pNtH, pImport-&gt;FirstThunk);</span><br><span class="line">		DWORD dwName = (DWORD)ImageBase + RVAOffset(pNtH, pImport-&gt;Name);</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"---------Import File Name: %s\n"</span>, dwName);</span><br><span class="line">		<span class="keyword">if</span> (dwOriginalFirstThunk == <span class="number">0x00000000</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			dwOriginalFirstThunk = dwFirstThunk;</span><br><span class="line">		&#125;</span><br><span class="line">		DWORD* pdwTrunkData = (DWORD*)dwOriginalFirstThunk;</span><br><span class="line">		<span class="keyword">int</span> n = <span class="number">0</span>, x = <span class="number">0</span>;</span><br><span class="line">		<span class="keyword">while</span> (pdwTrunkData[n] != <span class="number">0</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			DWORD TrunkData = pdwTrunkData[n];</span><br><span class="line">			<span class="keyword">if</span> (TrunkData &lt; IMAGE_ORDINAL_FLAG32)<span class="comment">//名字导入</span></span><br><span class="line">			&#123;</span><br><span class="line">				PIMAGE_IMPORT_BY_NAME pInportByName = (PIMAGE_IMPORT_BY_NAME)((DWORD)ImageBase + RVAOffset(pNtH, TrunkData));</span><br><span class="line">				<span class="built_in">printf</span>(<span class="string">"ImportByName: %s\n"</span>, pInportByName-&gt;Name);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span></span><br><span class="line">			&#123;</span><br><span class="line">				DWORD FunNumber = (DWORD)(TrunkData - IMAGE_ORDINAL_FLAG32);</span><br><span class="line">				<span class="built_in">printf</span>(<span class="string">"ImportByNumber: %-4d \n"</span>, FunNumber);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (x != <span class="number">0</span> &amp;&amp; x % <span class="number">3</span> == <span class="number">0</span>) <span class="built_in">printf</span>(<span class="string">"\n"</span>);</span><br><span class="line">			n++;</span><br><span class="line">			x++;</span><br><span class="line">		&#125;</span><br><span class="line">		cont = cont + <span class="number">40</span>;</span><br><span class="line">	&#125; <span class="keyword">while</span> (<span class="number">1</span>);</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> (ImageBase)</span><br><span class="line">		&#123;</span><br><span class="line">			UnmapViewOfFile(ImageBase);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (hMapping)</span><br><span class="line">		&#123;</span><br><span class="line">			CloseHandle(hMapping);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (hFile != INVALID_HANDLE_VALUE)</span><br><span class="line">		&#123;</span><br><span class="line">			CloseHandle(hFile);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="运行效果"><a href="#运行效果" class="headerlink" title="运行效果"></a>运行效果</h2><p>节表以及之前信息</p>
+<p><img src="/2019/03/27/PE结构详解/12.jpg" alt="12"></p>
+<p>导出表</p>
+<p><img src="/2019/03/27/PE结构详解/13.jpg" alt="13"></p>
+<p>导入表</p>
+<p><img src="/2019/03/27/PE结构详解/14.jpg" alt="14"></p>
+<h1 id="0x03：总结"><a href="#0x03：总结" class="headerlink" title="0x03：总结"></a>0x03：总结</h1><p>这个PE解析器虽然简单，但是自己写了之后对PE的理解和之前截然不同，后续可以对这个解析器进行各种优化，判断是否有壳之类的功能可以添加上去。</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://blog.csdn.net/koalazb/article/details/53590404" target="_blank" rel="noopener">https://blog.csdn.net/koalazb/article/details/53590404</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/PE文件/" rel="tag"><i class="fa fa-tag"></i> PE文件</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/03/23/Overflow-Free-Chunk/" rel="next" title="Overflow Free Chunk">
+                <i class="fa fa-chevron-left"></i> Overflow Free Chunk
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/05/off-by-one/" rel="prev" title="off-by-one">
+                off-by-one <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Thunder_J</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives">
+                
+                    <span class="site-state-item-count">28</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/ThunderJie" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.zhihu.com/people/thunder-j/activities" target="_blank" title="知乎"><i class="fa fa-fw fa-compass"></i>知乎</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://blog.csdn.net/CharlesGodX/" target="_blank" title="csdn"><i class="fa fa-fw fa-copyright"></i>csdn</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://twitter.com/ThunderJ17" target="_blank" title="Twitter"><i class="fa fa-fw fa-twitter"></i>Twitter</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0x00：前言"><span class="nav-number">1.</span> <span class="nav-text">0x00：前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x01：PE格式"><span class="nav-number">2.</span> <span class="nav-text">0x01：PE格式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#总体介绍"><span class="nav-number">2.1.</span> <span class="nav-text">总体介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PE文件整体结构"><span class="nav-number">2.2.</span> <span class="nav-text">PE文件整体结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PE指纹"><span class="nav-number">2.3.</span> <span class="nav-text">PE指纹</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DOS部分"><span class="nav-number">2.4.</span> <span class="nav-text">DOS部分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PE文件头"><span class="nav-number">2.5.</span> <span class="nav-text">PE文件头</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#节表"><span class="nav-number">2.6.</span> <span class="nav-text">节表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#导入表"><span class="nav-number">2.7.</span> <span class="nav-text">导入表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#导出表"><span class="nav-number">2.8.</span> <span class="nav-text">导出表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#重定位表"><span class="nav-number">2.9.</span> <span class="nav-text">重定位表</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x02：PE解析器编写"><span class="nav-number">3.</span> <span class="nav-text">0x02：PE解析器编写</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#下载链接"><span class="nav-number">3.1.</span> <span class="nav-text">下载链接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#运行效果"><span class="nav-number">3.2.</span> <span class="nav-text">运行效果</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x03：总结"><span class="nav-number">4.</span> <span class="nav-text">0x03：总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">4.1.</span> <span class="nav-text">参考链接</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright"> &copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Thunder_J</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+    <span title="站点总字数">328k</span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    
+    <span title="站点阅读时长">4:58</span>
+  
+</div>
+
+
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a class="theme-link" target="_blank" href="https://theme-next.org">NexT.Gemini</a> v6.4.2</div>
+
+
+
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:
+  <span id="busuanzi_value_site_uv"></span>
+  人
+</span>
+</div>
+
+<span id="busuanzi_container_site_pv">
+    总访问量
+    <span id="busuanzi_value_site_pv"></span>
+    次
+</span>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.2"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+
+<!-- ҳ����С���� -->
+<script type="text/javascript" src="/js/src/clicklove.js"></script>
