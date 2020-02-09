@@ -331,7 +331,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2099/12/02/Thunder-Jのdiary/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2099/01/01/My-Articles/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Thunder_J">
@@ -350,8 +350,8 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2099/12/02/Thunder-Jのdiary/" itemprop="url">
-                  Thunder_Jのdiary
+                <a class="post-title-link" href="/2099/01/01/My-Articles/" itemprop="url">
+                  My Articles
                 </a>
               
             
@@ -380,7 +380,7 @@
                 
               
 
-              <time title="创建时间：2099-12-02 16:47:34" itemprop="dateCreated datePublished" datetime="2099-12-02T16:47:34+08:00">2099-12-02</time>
+              <time title="创建时间：2099-01-01 12:00:00" itemprop="dateCreated datePublished" datetime="2099-01-01T12:00:00+08:00">2099-01-01</time>
             
 
             
@@ -397,7 +397,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2020-01-08 16:51:40" itemprop="dateModified" datetime="2020-01-08T16:51:40+08:00">2020-01-08</time>
+                <time title="修改时间：2020-02-09 12:56:32" itemprop="dateModified" datetime="2020-02-09T12:56:32+08:00">2020-02-09</time>
               
             
           </span>
@@ -424,7 +424,7 @@
                 
                   <span class="post-meta-item-text">本文字数：</span>
                 
-                <span title="本文字数">1.1k</span>
+                <span title="本文字数">118</span>
               
 
               
@@ -460,12 +460,16 @@
       
         
           
-          2020-1-8马上就去科恩实习了，希望自己能够学到一些真正前沿的东西，目标还有太多太多了，在去年听到Sakura学长一年进玄武的消息，总觉得离自己很远，现在自己虽然没有进玄武，科恩也是能够让我升华很多的地方。希望自己能够学到更多的东西，2020年拥有一个属于自己的一个CVE编号，博客已经成功迁移到
-          ...
+          这里收集了一些其他平台我发布的文章
+CVE-2017-11882 Office栈溢出漏洞分析
+CVE-2015-2546 内核Use After Free漏洞分析
+CVE-2015-0057：从Windows内核UAF到内核桌面堆分配
+
+          
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/2099/12/02/Thunder-Jのdiary/#more" rel="contents">
+              <a class="btn" href="/2099/01/01/My-Articles/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -522,7 +526,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/10/0ctf-babyheap/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/09/Linux-Pwn-Learning/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Thunder_J">
@@ -541,8 +545,8 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/09/10/0ctf-babyheap/" itemprop="url">
-                  0ctf-babyheap
+                <a class="post-title-link" href="/2020/02/09/Linux-Pwn-Learning/" itemprop="url">
+                  Linux Pwn Learning
                 </a>
               
             
@@ -571,7 +575,7 @@
                 
               
 
-              <time title="创建时间：2019-09-10 22:14:18 / 修改时间：22:21:52" itemprop="dateCreated datePublished" datetime="2019-09-10T22:14:18+08:00">2019-09-10</time>
+              <time title="创建时间：2020-02-09 11:59:03 / 修改时间：12:36:24" itemprop="dateCreated datePublished" datetime="2020-02-09T11:59:03+08:00">2020-02-09</time>
             
 
             
@@ -611,13 +615,6 @@
 
                 
                 
-                  ，
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/题目篇/PWN/堆/" itemprop="url" rel="index"><span itemprop="name">堆</span></a></span>
-
-                
-                
               
             </span>
           
@@ -642,7 +639,7 @@
                 
                   <span class="post-meta-item-text">本文字数：</span>
                 
-                <span title="本文字数">13k</span>
+                <span title="本文字数">108k</span>
               
 
               
@@ -656,7 +653,7 @@
                 
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
-                <span title="阅读时长">12 分钟</span>
+                <span title="阅读时长">1:39</span>
               
             </div>
           
@@ -678,234 +675,13 @@
       
         
           
-          前言本片文章从0ctf2017-babyheap这一道pwn题目入手，讲解pwn堆中的一些利用手法
-题目链接
-分析程序首先检查程序保护，所有的保护措施都是开启的，这意味着我们想要改写程序流程考虑从malloc_hook和free_hook入手
-123456[*] &apos;/home/thunde
+          0x00：Introduction本篇文章主要总结自己学习Linux Pwn的一些过程，记录了一些有意义的资料
+0x01：Stack Attack0x00：DynELFDynELF方法适用于没有libc的情况，我们可以通过DynELF方法来实现泄露system函数的地址，那么DynELF是什么呢？在
           ...
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/2019/09/10/0ctf-babyheap/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/08/glibc-heap/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Thunder_J">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Thunder_J">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/09/08/glibc-heap/" itemprop="url">
-                  glibc heap
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-		
-		
-
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-09-08 23:36:20 / 修改时间：23:45:28" itemprop="dateCreated datePublished" datetime="2019-09-08T23:36:20+08:00">2019-09-08</time>
-            
-
-            
-              
-
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a></span>
-
-                
-                
-                  ，
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/题目篇/" itemprop="url" rel="index"><span itemprop="name">题目篇</span></a></span>
-
-                
-                
-                  ，
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/题目篇/PWN/" itemprop="url" rel="index"><span itemprop="name">PWN</span></a></span>
-
-                
-                
-                  ，
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/题目篇/PWN/堆/" itemprop="url" rel="index"><span itemprop="name">堆</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-            <div class="post-symbolscount">
-              
-
-              
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-file-word-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">本文字数：</span>
-                
-                <span title="本文字数">23k</span>
-              
-
-              
-                <span class="post-meta-divider">|</span>
-              
-
-              
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-clock-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
-                
-                <span title="阅读时长">21 分钟</span>
-              
-            </div>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          0x00 前言本文实验环境主要是在Linux下，对Linux的堆知识进行整理和总结，也算是对许多资料的一个整理，和Windows相比，Linux下的堆管理机制并没有那么的严谨，导致了许多攻击的产生，下面就从概念开始分析Linux堆管理机制
-0x01 堆定义在程序运行过程中，堆可以提供动态分配的内存，
-          ...
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/2019/09/08/glibc-heap/#more" rel="contents">
+              <a class="btn" href="/2020/02/09/Linux-Pwn-Learning/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1171,7 +947,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/19/CVE-2016-0095/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/19/CVE-2016-0095-SSCTF Kernel Pwn Learning/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Thunder_J">
@@ -1190,8 +966,8 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/08/19/CVE-2016-0095/" itemprop="url">
-                  CVE-2016-0095
+                <a class="post-title-link" href="/2019/08/19/CVE-2016-0095-SSCTF Kernel Pwn Learning/" itemprop="url">
+                  CVE-2016-0095 SSCTF Kernel Pwn Learning
                 </a>
               
             
@@ -1237,7 +1013,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-08-23 00:00:42" itemprop="dateModified" datetime="2019-08-23T00:00:42+08:00">2019-08-23</time>
+                <time title="修改时间：2020-02-09 12:39:44" itemprop="dateModified" datetime="2020-02-09T12:39:44+08:00">2020-02-09</time>
               
             
           </span>
@@ -1338,7 +1114,7 @@
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/2019/08/19/CVE-2016-0095/#more" rel="contents">
+              <a class="btn" href="/2019/08/19/CVE-2016-0095-SSCTF Kernel Pwn Learning/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1619,7 +1395,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/28/Windows-Kernel-Exploit-内核漏洞学习-7-Uninitialized-Heap-Variable/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/28/Windows-Kernel-Exploit/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Thunder_J">
@@ -1638,8 +1414,8 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/07/28/Windows-Kernel-Exploit-内核漏洞学习-7-Uninitialized-Heap-Variable/" itemprop="url">
-                  Windows-Kernel-Exploit-内核漏洞学习(7)-Uninitialized-Heap-Variable
+                <a class="post-title-link" href="/2019/06/28/Windows-Kernel-Exploit/" itemprop="url">
+                  Windows-Kernel-Exploit
                 </a>
               
             
@@ -1668,12 +1444,24 @@
                 
               
 
-              <time title="创建时间：2019-07-28 23:26:55 / 修改时间：23:37:38" itemprop="dateCreated datePublished" datetime="2019-07-28T23:26:55+08:00">2019-07-28</time>
+              <time title="创建时间：2019-06-28 23:08:10" itemprop="dateCreated datePublished" datetime="2019-06-28T23:08:10+08:00">2019-06-28</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2020-02-09 11:36:30" itemprop="dateModified" datetime="2020-02-09T11:36:30+08:00">2020-02-09</time>
               
             
           </span>
@@ -1718,7 +1506,7 @@
                 
                   <span class="post-meta-item-text">本文字数：</span>
                 
-                <span title="本文字数">12k</span>
+                <span title="本文字数">79k</span>
               
 
               
@@ -1732,7 +1520,7 @@
                 
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
-                <span title="阅读时长">11 分钟</span>
+                <span title="阅读时长">1:11</span>
               
             </div>
           
@@ -1754,14 +1542,14 @@
       
         
           
-          0x00：前言这是 Windows kernel exploit 系列的最后一篇，如果你按顺序观看我之前文章并且自己调过的话，应该对各种漏洞类型在Windows 7 下的利用比较熟悉了，其他的话我放在最后说把，现在进入我所谓的最后一个专题，未初始化的堆变量利用，看此文章之前你需要有以下准备：
+          环境搭建0x00：前言这一系列文章是记录我在Windows内核漏洞学习的过程，我把他们整合成了一篇，覆盖了大部分漏洞的类型，既然是第0篇，那肯定是着重点放在环境的搭建和介绍，我的打算是先把HEVD中的大部分漏洞走一遍，实验环境是在Windows  7 x86 sp1，你需要安装的主要内容如下：
 
-Wi
+W
           ...
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/2019/07/28/Windows-Kernel-Exploit-内核漏洞学习-7-Uninitialized-Heap-Variable/#more" rel="contents">
+              <a class="btn" href="/2019/06/28/Windows-Kernel-Exploit/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1818,7 +1606,7 @@ Wi
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/28/Windows-Kernel-Exploit-内核漏洞学习-6-Uninitialized-Stack-Variable/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/21/Reverse Cryptography/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Thunder_J">
@@ -1837,8 +1625,8 @@ Wi
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/07/28/Windows-Kernel-Exploit-内核漏洞学习-6-Uninitialized-Stack-Variable/" itemprop="url">
-                  Windows-Kernel-Exploit-内核漏洞学习(6)-Uninitialized-Stack-Variable
+                <a class="post-title-link" href="/2019/05/21/Reverse Cryptography/" itemprop="url">
+                  Reverse Cryptography
                 </a>
               
             
@@ -1867,12 +1655,24 @@ Wi
                 
               
 
-              <time title="创建时间：2019-07-28 23:26:24 / 修改时间：23:37:32" itemprop="dateCreated datePublished" datetime="2019-07-28T23:26:24+08:00">2019-07-28</time>
+              <time title="创建时间：2019-05-21 14:40:55" itemprop="dateCreated datePublished" datetime="2019-05-21T14:40:55+08:00">2019-05-21</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2020-02-09 11:56:21" itemprop="dateModified" datetime="2020-02-09T11:56:21+08:00">2020-02-09</time>
               
             
           </span>
@@ -1889,7 +1689,14 @@ Wi
                 <span class="post-meta-item-text">分类于</span>
               
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Windows-Kernel/" itemprop="url" rel="index"><span itemprop="name">Windows Kernel</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CTF/Cryptography/" itemprop="url" rel="index"><span itemprop="name">Cryptography</span></a></span>
 
                 
                 
@@ -1917,7 +1724,448 @@ Wi
                 
                   <span class="post-meta-item-text">本文字数：</span>
                 
-                <span title="本文字数">10k</span>
+                <span title="本文字数">35k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">32 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          0x00：Introduction本片文章主要逆向一些CTF中的常见算法，对算法的原理和实现结合进行分析，总结一些常用的方法以供参考
+0x01：Base series0x01：Base64介绍Base64可以将ASCII字符串或者是二进制编码成只包含A—Z，a—z，0—9，+，/ 这64个字符（ 2
+          ...
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2019/05/21/Reverse Cryptography/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/03/27/PE结构详解/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Thunder_J">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Thunder_J">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/03/27/PE结构详解/" itemprop="url">
+                  PE结构详解
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+		
+		
+
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-03-27 17:05:41" itemprop="dateCreated datePublished" datetime="2019-03-27T17:05:41+08:00">2019-03-27</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2020-02-09 12:38:15" itemprop="dateModified" datetime="2020-02-09T12:38:15+08:00">2020-02-09</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Reverse/" itemprop="url" rel="index"><span itemprop="name">Reverse</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Reverse/PE/" itemprop="url" rel="index"><span itemprop="name">PE</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">19k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">18 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          0x00：前言PE文件可以说是在逆向的各个领域都有涉及，特别是病毒领域，如果你是一名病毒制造者，那你肯定是对PE文件有详细的了解，那么这里我就详细介绍一下PE文件，最后我们用C来写一个PE格式解析器。
+0x01：PE格式总体介绍首先说明一个概念，可执行文件(Executable File)是指可以由
+          ...
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/2019/03/27/PE结构详解/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/02/21/CVE-2014-4113 Windows内核经典Use Afer Free漏洞分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Thunder_J">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Thunder_J">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/02/21/CVE-2014-4113 Windows内核经典Use Afer Free漏洞分析/" itemprop="url">
+                  CVE-2014-4113 Windows内核经典Use Afer Free漏洞分析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+		
+		
+
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-02-21 10:56:10" itemprop="dateCreated datePublished" datetime="2019-02-21T10:56:10+08:00">2019-02-21</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2020-02-09 12:40:57" itemprop="dateModified" datetime="2020-02-09T12:40:57+08:00">2020-02-09</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CVE/" itemprop="url" rel="index"><span itemprop="name">CVE</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CVE/Windows-Kernel/" itemprop="url" rel="index"><span itemprop="name">Windows Kernel</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CVE/Windows-Kernel/Use-After-Free/" itemprop="url" rel="index"><span itemprop="name">Use After Free</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">9.7k</span>
               
 
               
@@ -1953,13 +2201,13 @@ Wi
       
         
           
-          0x00：前言这是 Windows kernel exploit 系列的第六部分，前一篇我们讲了空指针解引用，这一篇我们讲内核未初始化栈利用，这篇虽然是内核栈的利用，与前面不同的是，这里需要引入一个新利用手法 =&gt; 栈喷射，需要你对内核栈和用户栈理解的比较深入，看此文章之前你需要有以下准备：
-
+          0x00：前言CVE-2014-4113是一个非常经典的内核漏洞，本片文章从Poc触发，分析如何构造Exploit，Poc的下载在文末的链接之中，实验平台是Windows 7 x86 sp1本次漏洞是一个释放后重用的漏洞，深入了解这个漏洞对内核的一些利用方法会有不一样的收获
+0x01：Poc分析栈回
           ...
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/2019/07/28/Windows-Kernel-Exploit-内核漏洞学习-6-Uninitialized-Stack-Variable/#more" rel="contents">
+              <a class="btn" href="/2019/02/21/CVE-2014-4113 Windows内核经典Use Afer Free漏洞分析/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -2016,7 +2264,7 @@ Wi
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/28/Windows-Kernel-Exploit-内核漏洞学习-5-Null-Pointer-Dereference/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/02/21/CVE-2014-1767 Windows内核Double Free漏洞分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Thunder_J">
@@ -2035,8 +2283,8 @@ Wi
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/07/28/Windows-Kernel-Exploit-内核漏洞学习-5-Null-Pointer-Dereference/" itemprop="url">
-                  Windows-Kernel-Exploit-内核漏洞学习(5)-Null-Pointer-Dereference
+                <a class="post-title-link" href="/2019/02/21/CVE-2014-1767 Windows内核Double Free漏洞分析/" itemprop="url">
+                  CVE-2014-1767 Windows内核Double Free漏洞分析
                 </a>
               
             
@@ -2065,12 +2313,24 @@ Wi
                 
               
 
-              <time title="创建时间：2019-07-28 23:25:50 / 修改时间：23:37:28" itemprop="dateCreated datePublished" datetime="2019-07-28T23:25:50+08:00">2019-07-28</time>
+              <time title="创建时间：2019-02-21 10:56:03" itemprop="dateCreated datePublished" datetime="2019-02-21T10:56:03+08:00">2019-02-21</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2020-02-09 12:41:47" itemprop="dateModified" datetime="2020-02-09T12:41:47+08:00">2020-02-09</time>
               
             
           </span>
@@ -2087,7 +2347,21 @@ Wi
                 <span class="post-meta-item-text">分类于</span>
               
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Windows-Kernel/" itemprop="url" rel="index"><span itemprop="name">Windows Kernel</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CVE/" itemprop="url" rel="index"><span itemprop="name">CVE</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CVE/Windows-Kernel/" itemprop="url" rel="index"><span itemprop="name">Windows Kernel</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/CVE/Windows-Kernel/Double-Free/" itemprop="url" rel="index"><span itemprop="name">Double Free</span></a></span>
 
                 
                 
@@ -2115,7 +2389,7 @@ Wi
                 
                   <span class="post-meta-item-text">本文字数：</span>
                 
-                <span title="本文字数">6.3k</span>
+                <span title="本文字数">8.6k</span>
               
 
               
@@ -2129,7 +2403,7 @@ Wi
                 
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
-                <span title="阅读时长">6 分钟</span>
+                <span title="阅读时长">8 分钟</span>
               
             </div>
           
@@ -2151,212 +2425,12 @@ Wi
       
         
           
-          0x00：前言这是 Windows kernel exploit 系列的第五部分，前一篇我们讲了池溢出漏洞，这一篇我们讲空指针解引用，这篇和上篇比起来就很简单了，话不多说，进入正题，看此文章之前你需要有以下准备：
-
-Windows 7 x86 sp1虚拟机
-配置好windbg等调试工具，建议配合Vi
+          0x00：前言这次分析一个内核漏洞，信息量有点大，有不对的地方欢迎指正，介绍一下这个漏洞吧，2014年“最佳提权漏洞奖”得主，影响力还是很大的，实验环境的一些文件我放到GitHub上了，需要的自行下载：https://github.com/ThunderJie/CVE/tree/master/CVE
           ...
           <!--noindex-->
           
             <div class="post-button text-center">
-              <a class="btn" href="/2019/07/28/Windows-Kernel-Exploit-内核漏洞学习-5-Null-Pointer-Dereference/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/28/Windows-Kernel-Exploit-内核漏洞学习-4-PoolOverflow/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Thunder_J">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Thunder_J">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/07/28/Windows-Kernel-Exploit-内核漏洞学习-4-PoolOverflow/" itemprop="url">
-                  Windows-Kernel-Exploit-内核漏洞学习(4)-PoolOverflow
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-		
-		
-
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-07-28 23:25:21 / 修改时间：23:37:22" itemprop="dateCreated datePublished" datetime="2019-07-28T23:25:21+08:00">2019-07-28</time>
-            
-
-            
-              
-
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Windows-Kernel/" itemprop="url" rel="index"><span itemprop="name">Windows Kernel</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-            <div class="post-symbolscount">
-              
-
-              
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-file-word-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">本文字数：</span>
-                
-                <span title="本文字数">23k</span>
-              
-
-              
-                <span class="post-meta-divider">|</span>
-              
-
-              
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-clock-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
-                
-                <span title="阅读时长">21 分钟</span>
-              
-            </div>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          0x00：前言这是 Windows kernel exploit 系列的第四部分，前一篇我们讲了任意内存覆盖漏洞，这一篇我们讲内核池溢出漏洞，这一篇篇幅虽然可能不会很多，但是需要很多的前置知识，也就是说，我们需要对Windows内存分配机制有一个深入的理解，我的建议是先看《0day安全：软件漏洞分析
-          ...
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/2019/07/28/Windows-Kernel-Exploit-内核漏洞学习-4-PoolOverflow/#more" rel="contents">
+              <a class="btn" href="/2019/02/21/CVE-2014-1767 Windows内核Double Free漏洞分析/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -2402,7 +2476,7 @@ Windows 7 x86 sp1虚拟机
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -2445,7 +2519,7 @@ Windows 7 x86 sp1虚拟机
                 
                   <a href="/archives">
                 
-                    <span class="site-state-item-count">28</span>
+                    <span class="site-state-item-count">11</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
@@ -2484,13 +2558,7 @@ Windows 7 x86 sp1虚拟机
                     
                       
                     
-                      
-                    
-                      
-                    
-                      
-                    
-                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-count">13</span>
                     <span class="site-state-item-name">分类</span>
                   </a>
                 </div>
@@ -2523,19 +2591,7 @@ Windows 7 x86 sp1虚拟机
                     
                       
                     
-                      
-                    
-                      
-                    
-                      
-                    
-                      
-                    
-                      
-                    
-                      
-                    
-                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-count">10</span>
                     <span class="site-state-item-name">标签</span>
                   </a>
                 </div>
@@ -2619,7 +2675,7 @@ Windows 7 x86 sp1虚拟机
       <i class="fa fa-area-chart"></i>
     </span>
     
-    <span title="站点总字数">328k</span>
+    <span title="站点总字数">318k</span>
   
 
   
@@ -2628,7 +2684,7 @@ Windows 7 x86 sp1虚拟机
       <i class="fa fa-coffee"></i>
     </span>
     
-    <span title="站点阅读时长">4:58</span>
+    <span title="站点阅读时长">4:49</span>
   
 </div>
 
