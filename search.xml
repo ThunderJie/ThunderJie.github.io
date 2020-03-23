@@ -54,20 +54,20 @@
 <p>其中被断下来很多次，我们必须获取正确的调用链，这并不困难，因为它的调用栈很短。</p>
 <p><img src="/2020/03/21/CVE-2019-1458-从-漏洞报告-到POC的编写过程/NtUserMessageCall.png" alt="NtUserMessageCall"></p>
 <p>注：<code>NtUserMessageCall</code></p>
-<p>单步调试代码可以发现它从 <code>gapfnMessageCall</code> 数组中调用了函数，索引是0，它是根据<code>msg</code>值计算的，因此他会调用<code>NtUserfnDWORD</code>函数</p>
+<p>单步调试代码可以发现它从 <code>gapfnMessageCall</code> 数组指针中通过索引来调用的函数，这里索引是0，索引是根据<code>msg</code>值计算的，因此他会调用<code>NtUserfnDWORD</code>函数</p>
 <p><img src="/2020/03/21/CVE-2019-1458-从-漏洞报告-到POC的编写过程/NtUserfnDWORD.png" alt="NtUserfnDWORD"></p>
 <p>注：<code>NtUserfnDWORD</code></p>
-<p>下一次调用时使用<code>dwType</code>值，现在<code>gpsi</code>的偏移等于0x40，导致调用到<code>xxxWrapSwitchWndProc</code>函数(这个函数已经在刚才<code>DrawSwitchWndHilite</code>函数的调用链中出现)。</p>
+<p>下一个调用会比较<code>dwType</code>的值，并且现在<code>gpsi</code>的偏移等于0x40，导致调用到<code>xxxWrapSwitchWndProc</code>函数(这个函数在刚才<code>DrawSwitchWndHilite</code>函数的调用链中出现)。</p>
 <p><code>xxxWrapSwitchWndProc</code>函数中又调用了<code>xxxSwitchWndProc</code>函数</p>
 <p><img src="/2020/03/21/CVE-2019-1458-从-漏洞报告-到POC的编写过程/xxxSwitchWndProc.png" alt="xxxSwitchWndProc"></p>
 <p>注：<code>xxxSwitchWndProc</code></p>
 <p>代码执行到这里就会失败，没有办法继续执行到<code>xxxPaintSwitchWindow</code>函数，这是我们基于<code>msg</code>值等于<code>0x14</code>执行的流程。让我们检查一下原因。</p>
 <h3 id="触发正确的路径"><a href="#触发正确的路径" class="headerlink" title="触发正确的路径"></a>触发正确的路径</h3><p>就像前面那张图显示的，代码在这个地方会执行失败，因为窗口的fnid值不等于<code>0x2A0</code> (<code>FNID_SWITCH</code>)，并且正在发送的消息不等于1，所以会直接结束<code>xxxDefWindowProc</code>函数。为了避免这种情况，我们需要将fnid值设置为<code>FNID_SWITCH</code>然后再调用<code>xxxSwitchWndProc</code> 函数，这样我们就可以通过执行switch语句调用到<code>xxxPaintSwitchWindow</code>函数。</p>
-<p>如何设置正确的fnid值？实际上在第一个if块中和这里有着相同的功能，我们只需要将其内部的检查全部失败即可到达设置fnid值的地方。</p>
+<p>如何设置正确的fnid值？实际上上图中红色框已经显示的很清楚了，我们只需要将if中的检查全部失败即可到达设置fnid值的地方。</p>
 <p>下面是一些我们需要满足的条件，使这三个if判断都失败：</p>
 <ul>
 <li><p><code>fnid == 0</code> 和<code>cbwndExtra + 0x128 &gt;= *(gpsi + 0x154)</code></p>
-<p>对于每个用户创建的新窗口而言，它的fnid值都为0，<code>*(gpsi+0x154)</code>值在未修复版本的win32k中为0，但是即使它被设置为<code>0x130</code>，就像在修复版本中那样，我们仍可以将cbwndExtra设置为8或更高从而绕过第一个检查</p>
+<p>对于每个用户创建的新窗口而言，它的fnid值都为0，<code>*(gpsi+0x154)</code>值在未修复版本的win32k中为0，在修复版本中即使它被设置为<code>0x130</code>，我们仍可以通过将<code>cbwndExtra</code>设置为8或更高从而绕过第一个检查</p>
 </li>
 <li><p><code>msg == 1</code></p>
 <p>可以通过<code>NtUserMessageCall</code>函数进行设置，虽然将<code>msg</code> 设为 <code>1</code>可以控制流程执行到 <code>NtUserfnINLPCREATESTRUCT</code>而不是 <code>NtUserfnDWORD</code> 但是它仍会在<code>xxxSwitchWndProc</code>处终止</p>
