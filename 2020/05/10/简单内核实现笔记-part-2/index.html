@@ -128,7 +128,22 @@
 <meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/37.png">
 <meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/38.png">
 <meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/39.png">
-<meta property="og:updated_time" content="2020-05-14T01:52:00.391Z">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/40.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/41.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/42.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/43.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/44.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/45.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/46.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/47.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/48.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/49.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/50.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/51.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/52.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/53.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/54.png">
+<meta property="og:updated_time" content="2020-06-10T03:32:56.180Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="简单内核实现笔记 part 2">
 <meta name="twitter:description" content="保护模式进阶获取物理内存容量　　Linux获取内存容量方法有三种，本质上分别是BIOS中断0x15的3个子功能，BIOS是实模式下的方法，只能在保护模式之前调用。总结如下 利用BIOS中断0x15子功能0xe820获取内存 此方法最灵活，返回的内容也最丰富，内存信息的内容是地址范围描述符来描述的(ARDS)，每个字段4字节，一共20字节，调用0x15返回的也就是这个结构。其中Type字段表示内存类">
@@ -410,7 +425,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2020-05-14 09:52:00" itemprop="dateModified" datetime="2020-05-14T09:52:00+08:00">2020-05-14</time>
+                <time title="修改时间：2020-06-10 11:32:56" itemprop="dateModified" datetime="2020-06-10T11:32:56+08:00">2020-06-10</time>
               
             
           </span>
@@ -462,7 +477,7 @@
                 
                   <span class="post-meta-item-text">本文字数：</span>
                 
-                <span title="本文字数">16k</span>
+                <span title="本文字数">33k</span>
               
 
               
@@ -476,7 +491,7 @@
                 
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
-                <span title="阅读时长">15 分钟</span>
+                <span title="阅读时长">30 分钟</span>
               
             </div>
           
@@ -683,6 +698,329 @@
 </tr>
 </tbody>
 </table>
+<h2 id="ELF格式浅析"><a href="#ELF格式浅析" class="headerlink" title="ELF格式浅析"></a>ELF格式浅析</h2><p>我们下一步的目标是在内核中使用C语言，因为C语言是高级语言，在内核中的C语言用gcc编译需要指定很多参数，避免编译器添加许多不必要的函数。然而在Linux下C语言编译而成的可执行文件格式为ELF，想在我们的内核中运行ELF程序首先需要对其进行解析，下面简单介绍一下ELF文件格式，ELF文件格式分为文件头和文件体部分，文件头存放程序中其他的一些头表信息，文件体则具体的对这些表进行描述。ELF格式的作用体现在链接阶段和运行阶段两个方面，其布局如下图所示</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/40.png" alt="image-20200508083919353"></p>
+<p>其中elf header的结构如下所示，这里的很多结构都来自Linux源码<code>/usr/include/elf.h</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 32位elf头 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Elf32_Ehdr</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> e_ident[<span class="number">16</span>];</span><br><span class="line">    Elf32_Half e_type;</span><br><span class="line">    Elf32_Half e_machine;</span><br><span class="line">    Elf32_Word e_version;</span><br><span class="line">    Elf32_Addr e_entry;</span><br><span class="line">    Elf32_Off e_phoff;</span><br><span class="line">    Elf32_Off e_shoff;</span><br><span class="line">    Elf32_Word e_flags;</span><br><span class="line">    Elf32_Half e_ehsize;</span><br><span class="line">    Elf32_Half e_phentsize;</span><br><span class="line">    Elf32_Half e_phnum;</span><br><span class="line">    Elf32_Half e_shentsize;</span><br><span class="line">    Elf32_Half e_shnum;</span><br><span class="line">    Elf32_Half e_shstrndx;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>其中的一些数据类型如下</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">数据类型名称</th>
+<th style="text-align:left">字节大小</th>
+<th>对齐</th>
+<th style="text-align:left">意义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Elf32_Half</td>
+<td style="text-align:left">2</td>
+<td>2</td>
+<td style="text-align:left">无符号中等大小的整数</td>
+</tr>
+<tr>
+<td style="text-align:left">Elf32_Word</td>
+<td style="text-align:left">4</td>
+<td>4</td>
+<td style="text-align:left">无符号大整数</td>
+</tr>
+<tr>
+<td style="text-align:left">Elf32_Addr</td>
+<td style="text-align:left">4</td>
+<td>4</td>
+<td style="text-align:left">无符号程序运行地址</td>
+</tr>
+<tr>
+<td style="text-align:left">Elf32_Off</td>
+<td style="text-align:left">4</td>
+<td>4</td>
+<td style="text-align:left">无符号的文件偏移量</td>
+</tr>
+</tbody>
+</table>
+<p>下面介绍一些关键成员，其中<code>e_ident[16]</code>数组功能如下，其大小是16字节，存放一些文件属性信息</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/41.png" alt></p>
+<p><code>e_type</code>占用2字节，指定 elf 目标文件的类型</p>
+<table>
+<thead>
+<tr>
+<th>elf目标文件类型</th>
+<th>取值</th>
+<th>意义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ET_NONE</td>
+<td>0</td>
+<td>未知目标文件格式</td>
+</tr>
+<tr>
+<td>ET_REL</td>
+<td>1</td>
+<td>可重定位文件</td>
+</tr>
+<tr>
+<td>ET_EXEC</td>
+<td>2</td>
+<td>可执行文件</td>
+</tr>
+<tr>
+<td>ET_DYN</td>
+<td>3</td>
+<td>动态共享目标文件</td>
+</tr>
+<tr>
+<td>ET_CORE</td>
+<td>4</td>
+<td>core文件，即程序崩溃时其内存映像的转储格式</td>
+</tr>
+<tr>
+<td>ET_LOPROC</td>
+<td>0xff00</td>
+<td>特定处理器文件的扩展下边界</td>
+</tr>
+<tr>
+<td>ET_HIPROC</td>
+<td>0xffff</td>
+<td>特定处理器文件的扩展上边界</td>
+</tr>
+</tbody>
+</table>
+<p>剩下的一些字段如下，想更具体了解的可以自己百度</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>大小(字节)</th>
+<th style="text-align:center">意义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>e_machine</td>
+<td>2</td>
+<td style="text-align:center">支持的硬件平台</td>
+</tr>
+<tr>
+<td>e_version</td>
+<td>4</td>
+<td style="text-align:center">表示版本信息</td>
+</tr>
+<tr>
+<td>e_entry</td>
+<td>4</td>
+<td style="text-align:center">操作系统运行该程序时，将控制权转交到的虚拟地址</td>
+</tr>
+<tr>
+<td>e_phoff</td>
+<td>4</td>
+<td style="text-align:center">程序头表在文件内的字节偏移量。如果没有程序头表，该值为0</td>
+</tr>
+<tr>
+<td>e_shoff</td>
+<td>4</td>
+<td style="text-align:center">节头表在文件内的字节偏移量。若没有节头表，该值为0</td>
+</tr>
+<tr>
+<td>e_flags</td>
+<td>4</td>
+<td style="text-align:center">与处理器相关的标志</td>
+</tr>
+<tr>
+<td>e_ehsize</td>
+<td>2</td>
+<td style="text-align:center">指明 elf header 的字节大小</td>
+</tr>
+<tr>
+<td>e_phentsize</td>
+<td>2</td>
+<td style="text-align:center">指明程序头表(program header table )中每个条目(entry)的字节大小</td>
+</tr>
+<tr>
+<td>e_phnum</td>
+<td>2</td>
+<td style="text-align:center">指明程序头表中条目的数量。实际上就是段的个数</td>
+</tr>
+<tr>
+<td>e_shentsize</td>
+<td>2</td>
+<td style="text-align:center">节头表中每个条目的字节大小，即每个用来描述节信息的数据结构的字节大小</td>
+</tr>
+<tr>
+<td>e_shnum</td>
+<td>2</td>
+<td style="text-align:center">指明节头表中条目的数量。实际上就是节的个数</td>
+</tr>
+<tr>
+<td>e_shstrndx</td>
+<td>2</td>
+<td style="text-align:center">指明 string name table 在节头表中的索引 index</td>
+</tr>
+</tbody>
+</table>
+<p>下面再介绍一下<code>Elf32_Phdr</code>结构，此段是指程序中的某个数据或代码的区域段落，例如代码段或数据段，这个段不是内存中的段，此段是磁盘上程序中的一个段，下面是其结构</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Elf32_Phdr</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    Elf32_Word p_type;</span><br><span class="line">    Elf32_Off p_offset;</span><br><span class="line">    Elf32_Addr p_vaddr;</span><br><span class="line">    Elf32_Addr p_paddr;</span><br><span class="line">    Elf32_Word p_filesz;</span><br><span class="line">    Elf32_Word p_memsz;</span><br><span class="line">    Elf32_Word p_flags;</span><br><span class="line">    Elf32_Word p_align;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>各个字段的意义如下表</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th style="text-align:center">意义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>p_type</td>
+<td style="text-align:center">段类型</td>
+</tr>
+<tr>
+<td>p_offset</td>
+<td style="text-align:center">本段在文件的偏移量</td>
+</tr>
+<tr>
+<td>p_vaddr</td>
+<td style="text-align:center">本段在内存中起始的虚拟地址</td>
+</tr>
+<tr>
+<td>p_paddr</td>
+<td style="text-align:center">仅用于与物理地址相关的系统中</td>
+</tr>
+<tr>
+<td>p_filesz</td>
+<td style="text-align:center">本段在文件中的大小</td>
+</tr>
+<tr>
+<td>p_memsz</td>
+<td style="text-align:center">本段在内存中的大小</td>
+</tr>
+<tr>
+<td>p_flags</td>
+<td style="text-align:center">本段相关的标志</td>
+</tr>
+<tr>
+<td>p_align</td>
+<td style="text-align:center">本段在文件和内存中的对齐方式</td>
+</tr>
+</tbody>
+</table>
+<h2 id="载入内核"><a href="#载入内核" class="headerlink" title="载入内核"></a>载入内核</h2><p>　　Linux下可以用<code>readelf</code>命令解析ELF文件，下面是我们在kernel目录下新添加的测试代码，因为是64位操作系统，编译命令需要如下修改，我们下一步就是将这个简单的elf文件加载入内核，物理内存中0x900是loader.bin的加载地址，其开始部分是不能覆盖的GDT，预计其大小是小于2000字节，保守起见这里选起始的物理地址为0x1500，所以链接命令指定虚拟起始地址0xc0001500</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/42.png" alt></p>
+<p>下面通过<code>dd</code>命令将其写入磁盘，为了不纠结count的赋值，这里直接赋值为200，seek赋值为9，写在第9扇区</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo dd if=./kernel.bin of=/home/guang/soft/bochs-2.6.2/bin/hd60M.img bs=512 count=200 seek=9 conv=notrunc</span><br></pre></td></tr></table></figure>
+<p>写完之后我们需要修改loader.S中的内容，分两步完成</p>
+<ul>
+<li>加载内核：内核文件加载到内存缓冲区</li>
+<li>初始化内核：需要在分页后，将加载进来的elf内核文件安置到相应的虚拟内存地址，然后跳过去执行，从此loader的工作结束</li>
+</ul>
+<p>内核的加载地址选取的是<code>0x7e00~0x9fbff</code>范围中的0x70000，添加如下片断</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">; ------------------ 加载内核 ------------------</span><br><span class="line">mov eax, KERNEL_START_SECTOR  ; kernel.bin所在的扇区号0x9</span><br><span class="line">mov ebx, KERNEL_BIN_BASE_ADDR ; 0x70000</span><br><span class="line">; 从磁盘读出后,写入到ebx指定的地址</span><br><span class="line">mov ecx, 200 ; 读入的扇区数</span><br><span class="line"></span><br><span class="line">call rd_disk_m_32 ; eax,ebx,ecx均为参数,从硬盘上读取数据</span><br><span class="line"></span><br><span class="line">; 创建页目录及页表并初始化页内存位图</span><br><span class="line">call setup_page</span><br></pre></td></tr></table></figure>
+<p>下一步是初始化内核的工作，我们需要遍历<code>kernel.bin</code>程序中所有的段，因为它们才是程序运行的实质指令和数据的所在地，然后将各段拷贝到自己被编译的虚拟地址中，如下添加的是在<code>loader.S</code>中的内容，注释已经很详细了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line">   ; -------------------------   加载kernel  ----------------------</span><br><span class="line">   [略...]</span><br><span class="line">   ; 打开cr0的pg位(第31位)</span><br><span class="line">   mov eax, cr0</span><br><span class="line">   or eax, 0x80000000</span><br><span class="line">   mov cr0, eax</span><br><span class="line">   </span><br><span class="line">   ; 在开启分页后，用gdt新的地址重新加载</span><br><span class="line">   lgdt [gdt_ptr] ; 重新加载</span><br><span class="line">   </span><br><span class="line">   jmp SELECTOR_CODE:enter_kernel	  ; 强制刷新流水线,更新gdt,不刷新也可以</span><br><span class="line">enter_kernel:  </span><br><span class="line">   call kernel_init</span><br><span class="line">   mov esp, 0xc009f000     ;进入内核之后栈也要修改</span><br><span class="line">   jmp KERNEL_ENTRY_POINT  ; 用地址0x1500访问测试，结果ok</span><br><span class="line">;----------将kernel.bin中的segment拷贝到编译的地址----------</span><br><span class="line">kernel_init:</span><br><span class="line">   xor eax, eax</span><br><span class="line">   xor ebx, ebx	; 记录程序头表地址</span><br><span class="line">   xor ecx, ecx	; cx记录程序头表中的program header数量</span><br><span class="line">   xor edx, edx	; dx记录program header尺寸,即e_phentsize</span><br><span class="line">	</span><br><span class="line">   mov dx, [KERNEL_BIN_BASE_ADDR + 42] ; 偏移文件42字节处的属性是e_phentsize,表示program header大小</span><br><span class="line">   mov ebx, [KERNEL_BIN_BASE_ADDR + 28] ; 偏移文件开始部分28字节的地方是e_phoff,表示第1个program header在文件中的偏移量</span><br><span class="line"></span><br><span class="line">   add ebx, KERNEL_BIN_BASE_ADDR</span><br><span class="line">   mov cx, [KERNEL_BIN_BASE_ADDR + 44]    ; 偏移文件开始部分44字节的地方是e_phnum,表示有几个program header</span><br><span class="line">.each_segment:</span><br><span class="line">   cmp byte [ebx + 0], PT_NULL ; 若p_type等于 PT_NULL,说明此program header未使用。</span><br><span class="line">   je .PTNULL</span><br><span class="line">   </span><br><span class="line">   ;为函数memcpy压入参数,参数是从右往左依然压入.函数原型类似于 memcpy(dst,src,size)</span><br><span class="line">   push dword [ebx + 16] ; program header中偏移16字节的地方是p_filesz,压入函数memcpy的第三个参数:size</span><br><span class="line">   mov eax, [ebx + 4] ; 距程序头偏移量为4字节的位置是p_offset</span><br><span class="line">   add eax, KERNEL_BIN_BASE_ADDR	  ; 加上kernel.bin被加载到的物理地址,eax为该段的物理地址</span><br><span class="line">   push eax</span><br><span class="line">   push dword [ebx + 8] ; 压入函数memcpy的第一个参数:目的地址,偏移程序头8字节的位置是p_vaddr，这就是目的地址</span><br><span class="line">   call mem_cpy ; 调用mem_cpy完成段复制</span><br><span class="line">   add esp,12   ; 清理栈中压入的三个参数, 3 * 4 = 12 字节</span><br><span class="line">.PTNULL:</span><br><span class="line">   add ebx, edx				  ; edx为program header大小,即e_phentsize,在此ebx指向下一个program header </span><br><span class="line">   loop .each_segment</span><br><span class="line">   ret</span><br><span class="line">   </span><br><span class="line">;----------  逐字节拷贝 mem_cpy(dst,src,size) ------------</span><br><span class="line">;输入:栈中三个参数(dst,src,size)</span><br><span class="line">;输出:无</span><br><span class="line">;---------------------------------------------------------</span><br><span class="line">mem_cpy:</span><br><span class="line">	cld ; 控制重复字符递增方式,也就是edi和esi每复制一次就加一个单位大小,相对的指令为std</span><br><span class="line">	push ebp</span><br><span class="line">	mov esp, ebp</span><br><span class="line">	push ecx ; rep指令用到了ecx，但ecx对于外层段的循环还有用，故先入栈备份</span><br><span class="line">	mov edi, [ebp + 8]  ; dst</span><br><span class="line">	mov esi, [ebp + 12] ; src</span><br><span class="line">	mov ecx, [ebp + 16] ; size</span><br><span class="line">	rep movsb ; 逐字节拷贝,直到ecx为0</span><br><span class="line">	</span><br><span class="line">	; 恢复环境</span><br><span class="line">	pop ecx</span><br><span class="line">	pop ebp</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+<p>最终的一个内存布局如下，参考之前的1MB实模式地址图来对应就明白了</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/43.png" alt></p>
+<h2 id="特权管理"><a href="#特权管理" class="headerlink" title="特权管理"></a>特权管理</h2><p>　　特权级按照权力分为0、1、2、3级，数字越小，级别越高。计算机启动之初就在0级特权运行，MBR则就是0级权限，谈到权限就得提到TSS任务状态段，程序拥有此结构才能运行，相当于一个任务的身份证，结构如下图所示，大小为104字节，其中有很多寄存器信息，而TSS则是由TR寄存器加载的</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/44.png" alt></p>
+<p>每个特权级只能有一个栈，特权级在变换的时候需要用到不同特权级下的栈，特权转移分为两类，一类是中断门和调用门实现低权限到高权限，另一类是由调用返回指令从高权限到低权限，这是唯一一种让处理器降低权限的方法。</p>
+<p>对于低权限到高权限的情况，处理器需要提前记录目标栈的地方，更新SS和ESP，也就是说我们只需要提前在TSS中记录好高特权级的栈地址即可，也就是说TSS不需要记录3级特权的栈，因为它的权限最低。</p>
+<p>对于高权限到低权限的情况，一方面因为处理器不需要在TSS中寻找低特权级目标栈的，也就是说TSS也不需要记录3级特权的栈，另一方面因为低权限的栈地址已经存在了，这是由处理器的向高特权级转移指令(int、call等)实现机制决定的。下面就介绍一下权限相关的一些知识点：</p>
+<p><strong>CPL、DPL、RPL</strong></p>
+<p>CPL是当前进程的权限级别(Current Privilege Level)，是当前正在执行的代码所在的段的特权级，存在于cs寄存器的低两位。</p>
+<p>RPL是进程对段访问的请求权限(Request Privilege Level)，是对于段选择子而言的，每个段选择子有自己的RPL，它说明的是进程对段访问的请求权限，有点像函数参数。而且RPL对每个段来说不是固定的，两次访问同一段时的RPL可以不同。RPL可能会削弱CPL的作用，例如当前CPL=0的进程要访问一个数据段，它把段选择符中的RPL设为3，这样它对该段仍然只有特权为3的访问权限。</p>
+<p>DPL存储在段描述符中，规定访问该段的权限级别(Descriptor Privilege Level)，每个段的DPL固定。当进程访问一个段时，需要进程特权级检查，一般要求DPL &gt;= max {CPL, RPL}</p>
+<h2 id="门结构"><a href="#门结构" class="headerlink" title="门结构"></a>门结构</h2><p>处理器只有通过门结构才能由低特权级转移到高特权级，也可以通过门结构进行平级跳转，所以门相当于一个跳板，当前特权级首先需要大于门的DPL特权级，然后才能使用门来跳到想去的特权级，处理器就是这样设计的，四种门结构分别是：任务门、中断门、陷阱门、调用门。门描述符和段描述符类似，都是8字节大小的数据结构，用来描述门通向的代码，如下所示</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/45.png" alt></p>
+<p>任务门可以放在GDT、LDT、IDT中，调用门位于GDT、LDT中，中断门和陷阱门仅位于IDT中调用方法如下</p>
+<p><strong>调用门</strong></p>
+<p>call 和 jmp 指令后接调用门选择子为参数，以调用函数例程的形式实现从低特权向高特权转移，可用来实现系统调用。 call 指令使用调用门可以实现向高特权代码转移， jmp 指令使用调用门只能实现向平级代码转移。若需要参数传递，则0~4位表示参数个数，然后在权限切换的时候自动在栈中复制参数。关于调用门的过程保护，参考P240</p>
+<p><strong>中断门</strong></p>
+<p>以 int 指令主动发中断的形式实现从低特权向高特权转移， Linux 系统调用便用此中断门实现。</p>
+<p><strong>陷阱门</strong></p>
+<p>以 int3 指令主动发中断的形式实现从低特权向高特权转移，这一般是编译器在调试时用。</p>
+<p><strong>任务门</strong></p>
+<p>任务以任务状态段 TSS 为单位，用来实现任务切换，它可以借助中断或指令发起。当中断发生时，如果对应的中断向量号是任务门，则会发起任务切换。也可以像调用门那样，用 call 或 jmp 指令后接任务门的选择子或任务 TSS 的选择子。</p>
+<h2 id="IO特权级"><a href="#IO特权级" class="headerlink" title="IO特权级"></a>IO特权级</h2><p>保护模式下，处理器中的”阶级”不仅体现在数据和代码的访问，还体现在以下只有在0特权级下被执行的特权指令</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hlt、lgdt、ltr、popf等</span><br></pre></td></tr></table></figure>
+<p>还有一些IO敏感指令如<code>in、out、cli、sti</code>等访问端口的指令也需要在相应的特权级下操作，如果当前特权级小于 IOPL 时就会产生异常，IOTL 在 eflags 寄存器中，没有特殊的指令设置 eflags 寄存器，只有用 popf 结合 iretd 指令，在栈中修改，当然也只有在0特权下才能操作，eflags 寄存器中的 IOTL 位如下所示</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/46.png" alt></p>
+<h1 id="完善内核"><a href="#完善内核" class="headerlink" title="完善内核"></a>完善内核</h1><h2 id="调用约定"><a href="#调用约定" class="headerlink" title="调用约定"></a>调用约定</h2><p>调用约定主要体现在以下三方面：</p>
+<ol>
+<li>参数的传递方式，参数是存放在寄存器中还是栈中</li>
+<li>参数的传递顺序，是从左到右传递还是从右到左传递</li>
+<li>是调用者保存寄存器环境还是被调用者保存</li>
+</ol>
+<p>有如下常见的调用约定，我们主要关注cdecl、stdcall、thiscall即可</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/47.png" alt></p>
+<p>cdecl是默认c的调用约定，调用者将所有参数从右向左入栈，被调用者清理参数所占栈空间，举个例子</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">int subtract(int a, int b); // 被调用者</span><br><span class="line">int sub = subtract(3,2);    // 调用者</span><br></pre></td></tr></table></figure>
+<p>调用者汇编如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">push 2</span><br><span class="line">push 3</span><br><span class="line">call subtract</span><br></pre></td></tr></table></figure>
+<p>被调用者汇编如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">push ebp               ; 备份ebp</span><br><span class="line">mov esp, ebp           ; esp赋值给ebp</span><br><span class="line">mov eax, [ebp + 0x8]   ; 偏移8字节处为第一个参数a</span><br><span class="line">add eax, [ebp + 0xc]   ; 偏移0xc字节处是第二个参数b</span><br><span class="line">mov esp, ebp           ; 本句可有可无</span><br><span class="line">pop ebp                ; 恢复ebp</span><br><span class="line">ret 8                  ; 函数返回时esp+8,被调用函数清理栈中参数</span><br></pre></td></tr></table></figure>
+<p>进入subtract函数时栈中的布局如下</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/48.png" alt></p>
+<p>stdcall是微软Win32 API的标准，调用者将所有参数从右向左入栈，并且调用者清理参数所占栈空间，还是上面的例子，调用者汇编如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">push 2</span><br><span class="line">push 3</span><br><span class="line">call subtract</span><br><span class="line">add esp, 8 ; 调用者清理栈</span><br></pre></td></tr></table></figure>
+<p>被调用者汇编如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">push ebp               ; 备份ebp</span><br><span class="line">mov esp, ebp           ; esp赋值给ebp</span><br><span class="line">mov eax, [ebp + 0x8]   ; 偏移8字节处为第一个参数a</span><br><span class="line">add eax, [ebp + 0xc]   ; 偏移0xc字节处是第二个参数b</span><br><span class="line">mov esp, ebp           ; 本句可有可无</span><br><span class="line">pop ebp                ; 恢复ebp</span><br><span class="line">ret                    ; 直接返回</span><br></pre></td></tr></table></figure>
+<p>thiscall则在C++中非静态成员函数的默认调用约定，其主要区别是ecx会多保存一个this指针指向操作的对象。</p>
+<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><p>为了更加理解系统调用，在后面会更频繁的结合C和汇编进行操作，下面做一个实验，分别用三种方式调用write函数，模拟下面C调用库函数的过程</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    write(<span class="number">1</span>,<span class="string">"hello,world\n"</span>,<span class="number">4</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>模拟代码<code>syscall_write.S</code>如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">section .data</span><br><span class="line">str_c_lib: db &quot;C library says: hello world!&quot;, 0xa ; 0xa为换行符</span><br><span class="line">str_c_lib_len equ $-str_c_lib</span><br><span class="line"></span><br><span class="line">str_syscall: db &quot;syscall says: hello world!&quot;, 0xa</span><br><span class="line">str_syscall_len equ $-str_syscall</span><br><span class="line"></span><br><span class="line">section .text</span><br><span class="line">global _start</span><br><span class="line">_start:</span><br><span class="line">; ssize_t write(int fd,const void *buf,size_t count);</span><br><span class="line">; 方法一:模拟C语言中系统调用库函数write</span><br><span class="line">	push str_c_lib_len</span><br><span class="line">	push str_c_lib</span><br><span class="line">	push 1</span><br><span class="line">	</span><br><span class="line">	call my_write</span><br><span class="line">	add esp, 12</span><br><span class="line">	</span><br><span class="line">; 方法二:系统调用</span><br><span class="line">	mov eax, 4               ; 系统调用号</span><br><span class="line">	mov ebx, 1               ; fd</span><br><span class="line">	mov ecx, str_syscall     ; buf</span><br><span class="line">	mov edx, str_syscall_len ; count</span><br><span class="line">	int 0x80</span><br><span class="line">	</span><br><span class="line">; 退出程序</span><br><span class="line">	mov eax, 1 ; exit()</span><br><span class="line">	int 0x80</span><br><span class="line"></span><br><span class="line">; 下面模拟write系统调用</span><br><span class="line">my_write:</span><br><span class="line">	push ebp</span><br><span class="line">	mov esp, ebp</span><br><span class="line">	mov eax, 4</span><br><span class="line">	mov ebx, [ebp + 8]    ; fd</span><br><span class="line">	mov ecx, [ebp + 0xc]  ; buf</span><br><span class="line">	mov edx, [ebp + 0x10] ; count</span><br><span class="line">	int 0x80</span><br><span class="line">	pop ebp</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+<p>运行结果如下</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/49.png" alt></p>
+<p>既然我们用汇编模拟了C中的write函数，下面就用C结合汇编进行第二个实验</p>
+<p><code>C_with_S_c.c</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">extern</span> <span class="keyword">void</span> <span class="title">asm_print</span><span class="params">(<span class="keyword">char</span>*,<span class="keyword">int</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">c_print</span><span class="params">(<span class="keyword">char</span>* str)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> len=<span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span>(str[len++]);   <span class="comment">// 循环求出长度len,以'\0'结尾</span></span><br><span class="line">    asm_print(str, len);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>C_with_S_S.S</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">section .data</span><br><span class="line">str: db &quot;asm_print hello world!&quot;, 0xa, 0 ; 0xa为换行符,0为结束符</span><br><span class="line">str_len equ $-str</span><br><span class="line"></span><br><span class="line">section .text</span><br><span class="line">extern c_print</span><br><span class="line">global _start</span><br><span class="line">_start:</span><br><span class="line">	push str</span><br><span class="line">	call c_print</span><br><span class="line">	add esp, 4</span><br><span class="line">	</span><br><span class="line">; 退出程序</span><br><span class="line">	mov eax, 1 ; exit()</span><br><span class="line">	int 0x80</span><br><span class="line"></span><br><span class="line">; 下面模拟write系统调用</span><br><span class="line">global asm_print</span><br><span class="line">asm_print:</span><br><span class="line">	push ebp</span><br><span class="line">	mov ebp, esp</span><br><span class="line">	mov eax, 4</span><br><span class="line">	mov ebx, 1</span><br><span class="line">	mov ecx, [ebp + 8]   ; str</span><br><span class="line">	mov edx, [ebp + 0xc] ; len</span><br><span class="line">	int 0x80</span><br><span class="line">	pop ebp</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+<p>其调用关系如下图</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/50.png" alt></p>
+<p>编译过程如下所示</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/51.png" alt></p>
+<h2 id="实现打印函数"><a href="#实现打印函数" class="headerlink" title="实现打印函数"></a>实现打印函数</h2><p>对于字符的打印主要是对显卡端口的操作，所以是用汇编实现，这里新键一个lib目录，里面添加一个头文件，主要申请一些数据结构信息，来自Linux源码</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> _LIB_STDINT_H_</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _LIB_STDINT_H_</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">char</span> <span class="keyword">int8_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">signed</span> short <span class="keyword">int</span> <span class="keyword">int16_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">int</span> <span class="keyword">int32_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">signed</span> <span class="keyword">long</span> <span class="keyword">long</span> <span class="keyword">int</span> <span class="keyword">int64_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> <span class="keyword">uint8_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> short <span class="keyword">int</span> <span class="keyword">uint16_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="keyword">uint32_t</span>;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">long</span> <span class="keyword">int</span> <span class="keyword">uint64_t</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">//!_LIB_STDINT_H_</span></span></span><br></pre></td></tr></table></figure>
+<p>再新建一个user目录和一个kernel目录，我们的print实现代码就在kernel目录下的<code>print.S</code>，这个函数比较复杂，处理流程如下</p>
+<ol>
+<li>备份寄存器现场</li>
+<li>获取光标坐标值，光标坐标值是下一个可打印字符的位置</li>
+<li>获取待打印的字符</li>
+<li>判断字符是否为控制字符，如回车、换行、退格符需要特殊处理</li>
+<li>判断是否需要滚屏</li>
+<li>更新光标坐标值，使其指向下一个打印字符的位置</li>
+<li>恢复寄存器现场，退出</li>
+</ol>
+<p>首先需要知道光标和字符的区别，它们之间没有任何关系，光标位置保存在光标寄存器中，可以手动维护，这就需要参考书中的显卡寄存器索引(P264)，我们需要操作CRT控制数据寄存器中索引为0x0E的Cursor Location High Register和索引为0x0F的Cursor Location Low Register分别用来储存光标坐标的高8位和低8位。访问CRT寄存器，需要首先往端口地址为0x3D4寄存器写入索引，然后再从端口0x3D5的数据寄存器读写数据，另外一些特殊字符需要特殊处理，其中还会涉及到滚屏的处理，我们的屏幕是<code>80*25</code>大小的，步骤如下：</p>
+<ol>
+<li>将第1~24行搬到0~23行，覆盖第0行</li>
+<li>将24行也就是最后一行用空格覆盖，看起来像新的一行</li>
+<li>光标移动到第24行行首</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br></pre></td><td class="code"><pre><span class="line">TI_GDT equ 0</span><br><span class="line">RPL0 equ 0</span><br><span class="line">SELECTOR_VIDEO equ (0x0003&lt;&lt;3) + TI_GDT + RPL0</span><br><span class="line"></span><br><span class="line">[bits 32]</span><br><span class="line">section .text</span><br><span class="line">; ----------------- put_char -----------------</span><br><span class="line">; 把栈中的一个字符写入光标所在处</span><br><span class="line">; --------------------------------------------</span><br><span class="line">global put_char ; 全局变量，外部可调用</span><br><span class="line">put_char:</span><br><span class="line">	pushad ; 备份环境</span><br><span class="line">	; 保证gs中为正确的视频段选择子</span><br><span class="line">	; 为保险起见，每次打印时都为gs赋值</span><br><span class="line">	mov ax, SELECTOR_VIDEO ; 不能直接把立即数送入段寄存器</span><br><span class="line">	mov gs, ax</span><br><span class="line">	</span><br><span class="line">; 获取当前光标位置，25个字符一行，一共80行，从0行开始</span><br><span class="line">; 先获得高8位</span><br><span class="line">	mov dx, 0x03d4  ; 索引寄存器</span><br><span class="line">	mov al, 0x0e    ; 用于提供光标位置的高8位</span><br><span class="line">	out dx, al</span><br><span class="line">	mov dx, 0x03d5  ; 通过读写数据端口0x3d5来获得或设置光标位置</span><br><span class="line">	in  al, dx      ; 得到了光标位置的高8位</span><br><span class="line">	mov ah, al</span><br><span class="line">	</span><br><span class="line">	; 在获取低8位光标</span><br><span class="line">	mov dx, 0x3d4</span><br><span class="line">	mov al, 0x0f</span><br><span class="line">	out dx, al</span><br><span class="line">	mov dx, 0x3d5</span><br><span class="line">	in  al, dx</span><br><span class="line">	; 将16位完整的光标存入bx</span><br><span class="line">	mov bx, ax</span><br><span class="line">	; 下面这行是在栈中获取待打印的字符</span><br><span class="line">	mov ecx, [esp + 36] ; pushad压入4x8=32字节</span><br><span class="line">						; 加上主函数4字节返回地址</span><br><span class="line">	cmp cl, 0xd			; 回车CR是0x0d，换行LF是0x0a</span><br><span class="line">	jz .is_carriage_return</span><br><span class="line">	cmp cl, 0xa</span><br><span class="line">	jz .is_line_feed</span><br><span class="line">	</span><br><span class="line">	cmp cl, 0x8			; BS(backspace)的asc码是8</span><br><span class="line">	jz .is_backspace</span><br><span class="line">	jmp .put_other</span><br><span class="line"></span><br><span class="line">.is_backspace:</span><br><span class="line">	;;;;;;;;;;;;;;;;;; 对于backspace的一点说明 ;;;;;;;;;;;;;;;;;;</span><br><span class="line">	; 当为 backspace 时，光标前移一位</span><br><span class="line">	; 末尾添加空格或空字符0</span><br><span class="line">	dec bx</span><br><span class="line">	shl bx, 1				; 光标左移一位等于乘2</span><br><span class="line">							; 表示光标对应显存中的偏移字节</span><br><span class="line">	mov byte [gs:bx], 0x20	; 将待删除的字节补为0或空格皆可</span><br><span class="line">	inc bx</span><br><span class="line">	mov byte [gs:bx], 0x07</span><br><span class="line">	shr bx, 1</span><br><span class="line">	jmp .set_cursor</span><br><span class="line">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</span><br><span class="line">.put_other:</span><br><span class="line">	shl bx, 1      			; 光标位置用2字节表示，将光标值乘2         </span><br><span class="line">						    ; 表示对应显存中的偏移字节</span><br><span class="line">	mov [gs:bx], cl         ; ASCII字符本身</span><br><span class="line">	inc bx</span><br><span class="line">	mov byte [gs:bx], 0x07  ; 字符属性</span><br><span class="line">	shr bx, 1				; 恢复老的光标值</span><br><span class="line">	inc bx					; 下一个光标值</span><br><span class="line">	cmp bx, 2000</span><br><span class="line">	jl .set_cursor			; 若光标值小于2000，表示未写到显存的最后，则去设置新的光标值</span><br><span class="line">							; 若超出屏幕字符数大小(2000)则换行处理</span><br><span class="line">.is_line_feed:				; 是换行符LF(\n)</span><br><span class="line">.is_carriage_return:			; 是回车符</span><br><span class="line">; 如果是CR(\r)，只要把光标移到行首就行了</span><br><span class="line">	xor dx, dx 				; dx是被除数的高16位，清0</span><br><span class="line">	mov ax, bx				; ax是被除数的低16位</span><br><span class="line">	mov si, 80              ; 效访Linux中\n表示下一行的行首</span><br><span class="line">	div si					; 这里\n和\r都处理为下一行的行首</span><br><span class="line">	sub bx, dx				; 光标值减去除80的余数便是取整</span><br><span class="line">							; 以上4行处理\r的代码</span><br><span class="line">.is_carriage_return_end:    ; 回车符CR处理结束</span><br><span class="line">	add bx, 80</span><br><span class="line">	cmp bx, 2000</span><br><span class="line">.is_line_feed_end:			; 若是LF(\n)，将光标移+80便可</span><br><span class="line">	jl .set_cursor</span><br><span class="line">; 屏幕行范围是0~24，滚屏的原理是将屏幕的第1~24行搬运到第0~23行，再将第24行用空格填充</span><br><span class="line">.roll_screen:				; 若超出屏幕大小，开始滚屏</span><br><span class="line">	cld</span><br><span class="line">	mov ecx, 960			; 2000-80=1920个字符要搬运，共1920*2=3820字节</span><br><span class="line">							; 一次搬4字节，共3840/4=960次</span><br><span class="line">	mov esi, 0xc00b80a0		; 第一行行首</span><br><span class="line">	mov edi, 0xc00b8000		; 第0行行首</span><br><span class="line">	rep movsd</span><br><span class="line">	</span><br><span class="line">; 将最后一行填充为空白</span><br><span class="line">	mov ebx, 3840			; 最后一行首字符的第一个字节偏移=1920*2</span><br><span class="line">	mov ecx, 80				; 一行是80字符(160字节)，每次清空1字符(2字节)，一行需要移动80次</span><br><span class="line">	</span><br><span class="line">.cls:</span><br><span class="line">	mov word [gs:ebx], 0x0720 	; 0x0720是黑底白字的空格键</span><br><span class="line">	add ebx, 2</span><br><span class="line">	loop .cls</span><br><span class="line">	mov bx, 1920			  	; 将光标值重置为1920，最后一行的首字符</span><br><span class="line"></span><br><span class="line">.set_cursor:</span><br><span class="line">; 将光标设为bx值</span><br><span class="line">; 1.先设置高8位</span><br><span class="line">	mov dx, 0x03d4			  	; 索引寄存器</span><br><span class="line">	mov al, 0x0e				; 用于提供光标位置的高8位</span><br><span class="line">	out dx, al</span><br><span class="line">	mov dx, 0x03d5				; 通过读写数据端口0x3d5来获得或设置光标位置</span><br><span class="line">	mov al, bh</span><br><span class="line">	out dx, al</span><br><span class="line">	</span><br><span class="line">; 2.再设置低8位</span><br><span class="line">	mov dx, 0x3d4</span><br><span class="line">	mov al, 0x0f</span><br><span class="line">	out dx, al</span><br><span class="line">	mov dx, 0x03d5</span><br><span class="line">	mov al, bl</span><br><span class="line">	out dx, al</span><br><span class="line">.put_char_done:</span><br><span class="line">	popad</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+<p>头文件<code>print.h</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __LIB_KERNEL_PRINT_H <span class="comment">// 如果没有__LIB_KERNEL_PRINT_H宏则编译下面的代码</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __LIB_KERNEL_PRINT_H</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"stdint.h"</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">put_char</span><span class="params">(<span class="keyword">uint8_t</span> char_asci)</span></span>; <span class="comment">// 这里是8位无符号整型,为了和之前参数存放在cl寄存器长度吻合</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+<p>下面测试代码<code>main.o</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"print.h"</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span>&#123;</span><br><span class="line">	put_char(<span class="string">'k'</span>);</span><br><span class="line">	put_char(<span class="string">'e'</span>);</span><br><span class="line">	put_char(<span class="string">'r'</span>);</span><br><span class="line">	put_char(<span class="string">'n'</span>);</span><br><span class="line">	put_char(<span class="string">'e'</span>);</span><br><span class="line">	put_char(<span class="string">'l'</span>);</span><br><span class="line">	put_char(<span class="string">'\n'</span>);</span><br><span class="line">	put_char(<span class="string">'T'</span>);</span><br><span class="line">	put_char(<span class="string">'h'</span>);</span><br><span class="line">	put_char(<span class="string">'u'</span>);</span><br><span class="line">	put_char(<span class="string">'n'</span>);</span><br><span class="line">	put_char(<span class="string">'d'</span>);</span><br><span class="line">	put_char(<span class="string">'e'</span>);</span><br><span class="line">	put_char(<span class="string">'e'</span>);</span><br><span class="line">	put_char(<span class="string">'\b'</span>);</span><br><span class="line">	put_char(<span class="string">'r'</span>);</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>目前为止的目录结果如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── boot</span><br><span class="line">│   ├── include</span><br><span class="line">│   │   └── boot.inc</span><br><span class="line">│   ├── loader.bin</span><br><span class="line">│   ├── loader.S</span><br><span class="line">│   ├── mbr.bin</span><br><span class="line">│   └── mbr.S</span><br><span class="line">├── kernel</span><br><span class="line">│   ├── kernel.bin</span><br><span class="line">│   ├── main.c</span><br><span class="line">│   └── main.o</span><br><span class="line">└── lib</span><br><span class="line">    ├── kernel</span><br><span class="line">    │   ├── print.h</span><br><span class="line">    │   └── print.S</span><br><span class="line">    ├── stdint.h</span><br><span class="line">    └── user</span><br></pre></td></tr></table></figure>
+<p>编译需要用到的几条命令，目录不同会有变化</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo nasm -f elf -o print.o print.S</span><br><span class="line">sudo gcc -m32 -I /home/guang/soft/kernel/lib/kernel -c -o main.o main.c</span><br><span class="line">sudo ld -m elf_i386 -Ttext 0xc0001500 -e main -o kernel.bin main.o /home/guang/soft/kernel/lib/kernel/print.o</span><br><span class="line">sudo dd if=./kernel.bin of=/home/guang/soft/bochs-2.6.2/bin/hd60M.img bs=512 count=200 seek=9 conv=notrunc</span><br></pre></td></tr></table></figure>
+<p>显示结果如下</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/52.png" alt></p>
+<p>下面把<code>put_char</code>函数封装起来，<code>put_str</code>通过<code>put_char</code>来打印以<strong>0</strong>字符结尾的字符串，思想就是循环打印直到0结束</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">; --------------------------------------------</span><br><span class="line">; put_str通过put_char来打印以0字符结尾的字符串</span><br><span class="line">; 输入：栈中参数为打印的字符串</span><br><span class="line">; 输出：无</span><br><span class="line">; --------------------------------------------</span><br><span class="line">global put_str</span><br><span class="line">put_str:</span><br><span class="line">; 此函数用到ebx和ecx，先备份</span><br><span class="line">	push ebx</span><br><span class="line">	push ecx</span><br><span class="line">	xor ecx, ecx</span><br><span class="line">	mov ebx, [esp + 0xc] ; 栈中得到待打印字符串的地址</span><br><span class="line">.goon:</span><br><span class="line">	mov cl, [ebx]</span><br><span class="line">	cmp cl, 0       ; 如果处理到了字符串尾，跳到结束处返回</span><br><span class="line">	jz .str_over</span><br><span class="line">	push ecx		; 为put_char函数传递参数</span><br><span class="line">	call put_char	; 循环调用put_char实现打印字符串</span><br><span class="line">	add esp, 4</span><br><span class="line">	inc ebx			; ebx指向下一个字符</span><br><span class="line">	jmp .goon</span><br><span class="line"></span><br><span class="line">.str_over:</span><br><span class="line">	pop ecx</span><br><span class="line">	pop ebx</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+<p><code>print.h</code>中增加一行申明</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifndef</span> __LIB_KERNEL_PRINT_H <span class="comment">// 如果没有__LIB_KERNEL_PRINT_H宏则编译下面的代码</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __LIB_KERNEL_PRINT_H</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"stdint.h"</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">put_char</span><span class="params">(<span class="keyword">uint8_t</span> char_asci)</span></span>; <span class="comment">// 这里是8位无符号整型,为了和之前参数存放在cl寄存器长度吻合</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">put_str</span><span class="params">(<span class="keyword">char</span>* message)</span></span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+<p><code>main.c</code>对其进行调用测试</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"print.h"</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span>&#123;</span><br><span class="line">	put_str(<span class="string">"Welcome to kernel\n"</span>);</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>测试结果如下</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/53.png" alt></p>
+<p>前面是实现对字符的打印，下面需要增加对整数的打印，逐位处理，A~F再单独处理，再增加对高位多余0的处理，详情见注释</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line">;--------------------   将小端字节序的数字变成对应的ascii后，倒置   -----------------------</span><br><span class="line">;输入：栈中参数为待打印的数字</span><br><span class="line">;输出：在屏幕上打印16进制数字,并不会打印前缀0x,如打印10进制15时，只会直接打印f，不会是0xf</span><br><span class="line">;------------------------------------------------------------------------------------------</span><br><span class="line"></span><br><span class="line">global put_int</span><br><span class="line">put_int:</span><br><span class="line">	pushad</span><br><span class="line">	mov ebp, esp</span><br><span class="line">	mov eax, [ebp + 4*9] ; call的返回地址占4字节再加上pushad的8个四字节</span><br><span class="line">	mov edx, eax</span><br><span class="line">	mov edi, 7	; 指定在put_int_buffer中初始的偏移量	</span><br><span class="line">	mov ecx, 8	; 32位数字中，十六进制数字的位数是8个</span><br><span class="line">	mov ebx, put_int_buffer</span><br><span class="line">	</span><br><span class="line">; 将32位数字按照十六进制的形式从低位到高位逐个处理</span><br><span class="line">; 共处理8个十六进制数字</span><br><span class="line">.16based_4bits:	; 每4位二进制是16进制数字的1位</span><br><span class="line">; 遍历每一位十六进制数字</span><br><span class="line">	and edx, 0x0000000F	; 解析十六进制数字的每一位</span><br><span class="line">						; and与操作后，edx只有低4位有效</span><br><span class="line">	cmp edx, 9			; 数字0~9和a~f需要分别处理成对应的字符</span><br><span class="line">	jg .is_A2F</span><br><span class="line">	add edx, &apos;0&apos;		; ASCII码是8位大小。add求和操作后，edx低8位有效</span><br><span class="line">	jmp .store</span><br><span class="line">.is_A2F:</span><br><span class="line">	sub edx, 10			; A~F减去10所得到的差，再加上字符A的</span><br><span class="line">						; ASCII码，便是A~F对应的ASCII码</span><br><span class="line">	add edx, &apos;A&apos;</span><br><span class="line">; 将每一位数字转换成对应的字符后,按照类似“大端”的顺序存储到缓冲区put_int_buffer</span><br><span class="line">; 高位字符放在低地址,低位字符要放在高地址,这样和大端字节序类似,只不过咱们这里是字符序.</span><br><span class="line">.store:</span><br><span class="line">; 此时dl中应该是数字对应的字符的ASCII码</span><br><span class="line">	mov [ebx + edi], dl</span><br><span class="line">	dec edi</span><br><span class="line">	shr eax, 4</span><br><span class="line">	mov edx, eax</span><br><span class="line">	loop .16based_4bits</span><br><span class="line">	</span><br><span class="line">; 现在put_int_buffer中已全是字符，打印之前</span><br><span class="line">; 把高位连续的字符去掉，比如把字符000123变成123</span><br><span class="line">.ready_to_print:</span><br><span class="line">	inc edi		; 此时edi退减为-1(0xffffffff),加上1使其为0</span><br><span class="line">.skip_prefix_0:</span><br><span class="line">	cmp edi, 8	; 若已经比较第9个字符了</span><br><span class="line">				; 表示待打印的字符串为全0</span><br><span class="line">	je .full0</span><br><span class="line">; 找出连续的0字符，edi作为非0的最高位字符的偏移</span><br><span class="line">.go_on_skip:</span><br><span class="line">	mov cl, [put_int_buffer + edi]</span><br><span class="line">	inc edi</span><br><span class="line">	cmp cl, &apos;0&apos;</span><br><span class="line">	je .skip_prefix_0	; 继续判断下一位字符是否为字符0(不是数字0)</span><br><span class="line">	dec edi				; edi在上面的inc操作中指向了下一个字符</span><br><span class="line">	; 若当前字符不为&apos;0&apos;，要使edi减1恢复指向当前字符</span><br><span class="line">	jmp .put_each_num</span><br><span class="line">	</span><br><span class="line">.full0:</span><br><span class="line">	mov cl, &apos;0&apos;			; 输入的数字为全0时，则只打印0</span><br><span class="line">.put_each_num:</span><br><span class="line">	push ecx			; 此时cl中为可打印的字符</span><br><span class="line">	call put_char</span><br><span class="line">	add esp, 4</span><br><span class="line">	inc edi				; 使edi指向下一个字符</span><br><span class="line">	mov cl, [put_int_buffer + edi] ; 获取下一个字符到cl寄存器</span><br><span class="line">	cmp edi, 8</span><br><span class="line">	jl .put_each_num</span><br><span class="line">	popad</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+<p>在<code>print.h</code>增加一行<code>put_int</code>的申明注释，<code>main.c</code>中增加测试代码即可，测试结果如下所示</p>
+<p><img src="/2020/05/10/简单内核实现笔记-part-2/54.png" alt></p>
 
       
     </div>
@@ -726,8 +1064,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2099/01/01/My-Articles/" rel="prev" title="My Articles">
-                My Articles <i class="fa fa-chevron-right"></i>
+              <a href="/2020/05/15/简单内核实现笔记-part-3/" rel="prev" title="简单内核实现笔记-part-3">
+                简单内核实现笔记-part-3 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -798,7 +1136,7 @@
                 
                   <a href="/archives">
                 
-                    <span class="site-state-item-count">14</span>
+                    <span class="site-state-item-count">15</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
@@ -943,7 +1281,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#保护模式进阶"><span class="nav-number">1.</span> <span class="nav-text">保护模式进阶</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#获取物理内存容量"><span class="nav-number">1.1.</span> <span class="nav-text">获取物理内存容量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#启动分页机制"><span class="nav-number">1.2.</span> <span class="nav-text">启动分页机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一级页表"><span class="nav-number">1.3.</span> <span class="nav-text">一级页表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二级页表"><span class="nav-number">1.4.</span> <span class="nav-text">二级页表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#快表TLB"><span class="nav-number">1.5.</span> <span class="nav-text">快表TLB</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#保护模式进阶"><span class="nav-number">1.</span> <span class="nav-text">保护模式进阶</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#获取物理内存容量"><span class="nav-number">1.1.</span> <span class="nav-text">获取物理内存容量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#启动分页机制"><span class="nav-number">1.2.</span> <span class="nav-text">启动分页机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一级页表"><span class="nav-number">1.3.</span> <span class="nav-text">一级页表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二级页表"><span class="nav-number">1.4.</span> <span class="nav-text">二级页表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#快表TLB"><span class="nav-number">1.5.</span> <span class="nav-text">快表TLB</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ELF格式浅析"><span class="nav-number">1.6.</span> <span class="nav-text">ELF格式浅析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#载入内核"><span class="nav-number">1.7.</span> <span class="nav-text">载入内核</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#特权管理"><span class="nav-number">1.8.</span> <span class="nav-text">特权管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#门结构"><span class="nav-number">1.9.</span> <span class="nav-text">门结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IO特权级"><span class="nav-number">1.10.</span> <span class="nav-text">IO特权级</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#完善内核"><span class="nav-number">2.</span> <span class="nav-text">完善内核</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#调用约定"><span class="nav-number">2.1.</span> <span class="nav-text">调用约定</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统调用"><span class="nav-number">2.2.</span> <span class="nav-text">系统调用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现打印函数"><span class="nav-number">2.3.</span> <span class="nav-text">实现打印函数</span></a></li></ol></li></ol></div>
             
 
           </div>
@@ -976,7 +1314,7 @@
       <i class="fa fa-area-chart"></i>
     </span>
     
-    <span title="站点总字数">369k</span>
+    <span title="站点总字数">450k</span>
   
 
   
@@ -985,7 +1323,7 @@
       <i class="fa fa-coffee"></i>
     </span>
     
-    <span title="站点阅读时长">5:35</span>
+    <span title="站点阅读时长">6:49</span>
   
 </div>
 
