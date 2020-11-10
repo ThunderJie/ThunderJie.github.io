@@ -108,13 +108,18 @@
 
 
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Thunder_J">
-<meta property="og:url" content="http://yoursite.com/archives/2020/03/index.html">
+  <meta name="description" content="本文搜集了一些windbg常用的命令，方便自己查阅，老版本windbg现在已经集成在visual studio里面，新版本的直接在Microsoft Store里面可以搜到，不过新的windbg preview版本不是很稳定，不过UI挺友好的。下面的内容不定期补充，首先放一个官方对windbg命令介绍的地址  https://docs.microsoft.com/en-us/windows-har">
+<meta name="keywords" content="Tools">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WinDbg Tricks">
+<meta property="og:url" content="http://yoursite.com/2020/11/10/WinDbg-Tricks/index.html">
 <meta property="og:site_name" content="Thunder_J">
+<meta property="og:description" content="本文搜集了一些windbg常用的命令，方便自己查阅，老版本windbg现在已经集成在visual studio里面，新版本的直接在Microsoft Store里面可以搜到，不过新的windbg preview版本不是很稳定，不过UI挺友好的。下面的内容不定期补充，首先放一个官方对windbg命令介绍的地址  https://docs.microsoft.com/en-us/windows-har">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-11-10T09:34:57.502Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Thunder_J">
+<meta name="twitter:title" content="WinDbg Tricks">
+<meta name="twitter:description" content="本文搜集了一些windbg常用的命令，方便自己查阅，老版本windbg现在已经集成在visual studio里面，新版本的直接在Microsoft Store里面可以搜到，不过新的windbg preview版本不是很稳定，不过UI挺友好的。下面的内容不定期补充，首先放一个官方对windbg命令介绍的地址  https://docs.microsoft.com/en-us/windows-har">
 
 
 
@@ -123,7 +128,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/archives/2020/03/">
+  <link rel="canonical" href="http://yoursite.com/2020/11/10/WinDbg-Tricks/">
 
 
 
@@ -133,7 +138,7 @@
   };
 </script>
 
-  <title>归档 | Thunder_J</title>
+  <title>WinDbg Tricks | Thunder_J</title>
   
 
 
@@ -182,7 +187,7 @@
     
   
 
-  <div class="container sidebar-position-left page-archive">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 <a href="https://your-url" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewbox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
 
@@ -310,101 +315,275 @@
           
             
 
-    
-    
-      
-      
-    
-      
-      
-    
-      
-      
-    
-      
-      
-    
-    
-
-  
-
-
           
           <div id="content" class="content">
             
 
+  <div id="posts" class="posts-expand">
+    
+
+  
+
   
   
   
-  <div class="post-block archive">
-    <div id="posts" class="posts-collapse">
-      <span class="archive-move-on"></span>
 
-      
-      <span class="archive-page-counter">
-        
-        
-        
-          
-        
-        嗯..! 目前共计 17 篇日志。 继续努力。
-      </span>
-      
-
-      
-
-        
-        
-        
-
-        
-          
-          <div class="collection-title">
-            <h1 class="archive-year" id="archive-year-2020">2020</h1>
-          </div>
-        
-        
-
-        
+  
 
   <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/10/WinDbg-Tricks/">
 
-      <h2 class="post-title">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Thunder_J">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Thunder_J">
+    </span>
+
+    
+      <header class="post-header">
+
         
-            <a class="post-title-link" href="/2020/03/21/CVE-2019-1458-从-漏洞报告-到POC的编写过程/" itemprop="url">
-              
-                <span itemprop="name">CVE-2019-1458: 从'漏洞报告'到POC的编写过程</span>
-              
-            </a>
         
-      </h2>
+          <h1 class="post-title" itemprop="name headline">WinDbg Tricks
+              
+            
+          </h1>
+        
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2020-03-21T23:48:24+08:00" content="2020-03-21">
-          03-21
-        </time>
-      </div>
+        <div class="post-meta">
+		
+		
 
-    </header>
-  </article>
+          <span class="post-time">
 
+            
+            
+            
 
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2020-11-10 17:32:48 / 修改时间：17:34:57" itemprop="dateCreated datePublished" datetime="2020-11-10T17:32:48+08:00">2020-11-10</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Reverse/" itemprop="url" rel="index"><span itemprop="name">Reverse</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Reverse/Tools/" itemprop="url" rel="index"><span itemprop="name">Tools</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             阅读次数： 
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">4k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">4 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
+      
 
+      
+        <p>本文搜集了一些windbg常用的命令，方便自己查阅，老版本windbg现在已经集成在visual studio里面，新版本的直接在Microsoft Store里面可以搜到，不过新的windbg preview版本不是很稳定，不过UI挺友好的。下面的内容不定期补充，首先放一个官方对windbg命令介绍的地址</p>
+<blockquote>
+<p><a href="https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/commands" target="_blank" rel="noopener">https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/commands</a></p>
+</blockquote>
+<h2 id="符号"><a href="#符号" class="headerlink" title="符号"></a>符号</h2><p>windbg里面下载微软符号都需要梯子，我是这样设置的<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SRV*C:\MyLocalSymbols*http://msdl.microsoft.com/download/symbols </span><br><span class="line">srv*C:\symbols_folder*http://msdl.microsoft.com/download/symbols</span><br><span class="line">SRV*c:\mysymbol* http://msdl.microsoft.com/download/symbols</span><br></pre></td></tr></table></figure></p>
+<p>如果符号没加载出来可以<code>!sym noisy</code>激活详细符号加载显示，然后再<code>.reload</code>重新加载看什么问题</p>
+<h2 id="断点"><a href="#断点" class="headerlink" title="断点"></a>断点</h2><p>下面记录一些常用断点命令</p>
+<ol>
+<li><p>硬件断点，最多下四个断点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ba e1 address</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>软件断点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bp address</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>条件断点</p>
+</li>
+</ol>
+<p>对寄存器进行监控，eax 等于0x41的时候断下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ba e1 address &quot;.if @eax = 0x41  &#123;&#125; .else &#123;gc&#125;&quot;</span><br></pre></td></tr></table></figure></p>
+<p>打印一些数据，当在address断下的时候可以打印函数名和rax寄存器里面的内容<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bp address &quot;.echo function name; dq rax; gc&quot;</span><br></pre></td></tr></table></figure></p>
+<p>如果需要指定当前线程中对函数下断点，可以用下面的例子指定当前线程<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ba e1 /t $thread xxx</span><br></pre></td></tr></table></figure></p>
+<h2 id="进程操作"><a href="#进程操作" class="headerlink" title="进程操作"></a>进程操作</h2><ol>
+<li><code>!process 0 0</code>显示进程列表<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; !process 0 0</span><br><span class="line">**** NT ACTIVE PROCESS DUMP ****</span><br><span class="line">PROCESS ffff86851c08a300</span><br><span class="line">    SessionId: none  Cid: 0004    Peb: 00000000  ParentCid: 0000</span><br><span class="line">    DirBase: 001ad002  ObjectTable: ffffc78ec3004b80  HandleCount: 2457.</span><br><span class="line">    Image: System</span><br><span class="line"></span><br><span class="line">PROCESS ffff86851c12e080</span><br><span class="line">    SessionId: none  Cid: 00a0    Peb: 00000000  ParentCid: 0004</span><br><span class="line">    DirBase: 02d72002  ObjectTable: ffffc78ec3007380  HandleCount:   0.</span><br><span class="line">    Image: Registry</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>后面加xxx.exe可以指定进程<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; !process 0 0 smss.exe</span><br><span class="line">PROCESS ffff868520d36400</span><br><span class="line">    SessionId: none  Cid: 01a4    Peb: 2238d4d000  ParentCid: 0004</span><br><span class="line">    DirBase: 12a451002  ObjectTable: ffffc78ec3507480  HandleCount:  53.</span><br><span class="line">    Image: smss.exe</span><br></pre></td></tr></table></figure></p>
+<p>也可以根据PID直接搜索<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; !process 470 0</span><br><span class="line">Searching for Process with Cid == 470</span><br><span class="line">PROCESS ffff868523618340</span><br><span class="line">    SessionId: 0  Cid: 0470    Peb: d294a3d000  ParentCid: 02bc</span><br><span class="line">    DirBase: 1b824002  ObjectTable: ffffc78ec70f7b40  HandleCount: 657.</span><br><span class="line">    Image: svchost.exe</span><br></pre></td></tr></table></figure></p>
+<ol start="2">
+<li><p>如果windbg正在调试内核，可以直接修改当前process调试ring3的进程，<code>.process</code>命令指定要用作进程上下文的进程，直接使用<code>.process</code>可显示当前进程的<code>EPROCESS</code>，下面展示了一次切换进程上下文的例子，将<code>0xffff86851c08a300</code>切换为了<code>ffff868520f77080</code>，这样就可以直接调ring3的进程，不过需要重新<code>g</code>跑一下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; .process</span><br><span class="line">Implicit process is now ffff8685`1c08a300</span><br><span class="line">1: kd&gt; .process /i /p ffff8685`20f77080</span><br><span class="line">You need to continue execution (press &apos;g&apos; &lt;enter&gt;) for the context</span><br><span class="line">to be switched. When the debugger breaks in again, you will be in</span><br><span class="line">the new process context.</span><br><span class="line">1: kd&gt; g</span><br><span class="line">Break instruction exception - code 80000003 (first chance)</span><br><span class="line">nt!DbgBreakPointWithStatus:</span><br><span class="line">fffff805`0c27cb30 cc              int     3</span><br><span class="line">0: kd&gt; .process</span><br><span class="line">Implicit process is now ffff8685`20f77080</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可以通过<code>!dml_proc</code>命令直接查看所有进程，非常方便</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; !dml_proc</span><br><span class="line">Address           PID  Image file name</span><br><span class="line">ffff8685`1c08a300 4    System         </span><br><span class="line">ffff8685`1c12e080 a0   Registry       </span><br><span class="line">ffff8685`20d36400 1a4  smss.exe       </span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="查看句柄"><a href="#查看句柄" class="headerlink" title="查看句柄"></a>查看句柄</h2><p>可以通过<code>!handle</code>命令查看当前进程所有句柄，需要在内核调试器下才能看句柄信息<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; !handle</span><br><span class="line"></span><br><span class="line">PROCESS ffff868523618340</span><br><span class="line">    SessionId: 0  Cid: 0470    Peb: d294a3d000  ParentCid: 02bc</span><br><span class="line">    DirBase: 1b824002  ObjectTable: ffffc78ec70f7b40  HandleCount: 657.</span><br><span class="line">    Image: svchost.exe</span><br><span class="line"></span><br><span class="line">Handle table at ffffc78ec70f7b40 with 657 entries in use</span><br><span class="line"></span><br><span class="line">0004: Object: ffff868521fda960  GrantedAccess: 001f0003 (Protected) (Inherit) Entry: ffffc78ec72a1010</span><br><span class="line">Object: ffff868521fda960  Type: (ffff86851c0a87a0) Event</span><br><span class="line">    ObjectHeader: ffff868521fda930 (new version)</span><br><span class="line">        HandleCount: 1  PointerCount: 32767</span><br><span class="line"></span><br><span class="line">0008: Object: ffff868521fda3e0  GrantedAccess: 001f0003 (Protected) (Inherit) Entry: ffffc78ec72a1020</span><br><span class="line">Object: ffff868521fda3e0  Type: (ffff86851c0a87a0) Event</span><br><span class="line">    ObjectHeader: ffff868521fda3b0 (new version)</span><br><span class="line">        HandleCount: 1  PointerCount: 32718</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>加上<code>/f</code>选项即可查看句柄详细信息，此功能大多用在查看驱动设备名<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">1: kd&gt; !handle 0xa0 /f</span><br><span class="line"></span><br><span class="line">PROCESS ffff868523618340</span><br><span class="line">    SessionId: 0  Cid: 0470    Peb: d294a3d000  ParentCid: 02bc</span><br><span class="line">    DirBase: 1b824002  ObjectTable: ffffc78ec70f7b40  HandleCount: 657.</span><br><span class="line">    Image: svchost.exe</span><br><span class="line"></span><br><span class="line">Handle table at ffffc78ec70f7b40 with 657 entries in use</span><br><span class="line"></span><br><span class="line">00a0: Object: ffff868523605b80  GrantedAccess: 00000804 (Protected) (Audit) Entry: ffffc78ec72a1280</span><br><span class="line">Object: ffff868523605b80  Type: (ffff86851c1f56c0) EtwRegistration</span><br><span class="line">    ObjectHeader: ffff868523605b50 (new version)</span><br><span class="line">        HandleCount: 1  PointerCount: 1</span><br></pre></td></tr></table></figure></p>
+
+      
     </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Tools/" rel="tag"><i class="fa fa-tag"></i> Tools</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/06/11/简单内核实现笔记-part-4/" rel="next" title="简单内核实现笔记-part-4">
+                <i class="fa fa-chevron-left"></i> 简单内核实现笔记-part-4
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2099/01/01/My-Articles/" rel="prev" title="My Articles">
+                My Articles <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </div>
   
   
   
+  </article>
 
-  
 
+  </div>
 
 
           </div>
           
+
+  
+
+
 
         </div>
         
@@ -425,8 +604,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -580,6 +768,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#符号"><span class="nav-number">1.</span> <span class="nav-text">符号</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#断点"><span class="nav-number">2.</span> <span class="nav-text">断点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#进程操作"><span class="nav-number">3.</span> <span class="nav-text">进程操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查看句柄"><span class="nav-number">4.</span> <span class="nav-text">查看句柄</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -755,6 +959,10 @@
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.2"></script>
+
+
 
   
 
