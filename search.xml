@@ -8,9 +8,76 @@
 <p><a href="https://xz.aliyun.com/t/6668" target="_blank" rel="noopener">CVE-2017-11882 Office栈溢出漏洞分析</a></p>
 <p><a href="https://xz.aliyun.com/t/6115" target="_blank" rel="noopener">CVE-2015-2546 内核Use After Free漏洞分析</a></p>
 <p><a href="https://www.anquanke.com/post/id/192604" target="_blank" rel="noopener">CVE-2015-0057：从Windows内核UAF到内核桌面堆分配</a></p>
+<p><a href="https://xz.aliyun.com/t/8594" target="_blank" rel="noopener">类型混淆漏洞模式浅析</a></p>
+<p><a href="https://xz.aliyun.com/t/8996" target="_blank" rel="noopener">NTFS CVE-2020-17096 分析复现</a></p>
+<p><a href="https://xz.aliyun.com/t/9029" target="_blank" rel="noopener">SMB协议漏洞分析</a></p>
 ]]></content>
       <tags>
         <tag>My Articles</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>C++学习路线</title>
+    <url>/2021/02/08/C-%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF/</url>
+    <content><![CDATA[<h2 id="0x00：前言"><a href="#0x00：前言" class="headerlink" title="0x00：前言"></a>0x00：前言</h2><p>转眼间2020就到了末尾，马上就要过年了，祝各位新年快乐。没想到在2020年末尾我能得到微软给我的第一笔2000刀的赏金，明年继续加油，也祝各位0day多多。</p>
+<p>我不太清楚有没有人看我的博客，博客也很久没更新了，大多是记载之前的一些文章，现在看起哪些文章我都觉得写的太烂了，如果你能认真看完，那确实太棒了，你的理解学习能力很好。从我接触安全到2021年大概是2年前，我记得我第一次注册看雪论坛是<code>2018-09-13</code>，当时就想着学最难的技术，能接触到的就是二进制pwn和逆向了吧，无奈很多东西都看不太懂，就只有慢慢补基础，有些时候觉得自己开发能力弱，又不知道该写点什么，导致了我并没有搞清楚自己的学习路线到底应该是啥，所以下面我准备搜集一点关于开发的学习资料，大多数针对C++，感兴趣的同学可以借鉴借鉴。</p>
+<h2 id="0x01：资源"><a href="#0x01：资源" class="headerlink" title="0x01：资源"></a>0x01：资源</h2><p>因为资源的链接不稳定，很容易就没了，所以我还是就放个名字，感兴趣的朋友自己去搜吧，首先是我推荐的视频教程</p>
+<ul>
+<li><p>侯捷老师的C++系列课程</p>
+<p>前段时间b站貌似搜得到，现在好像没了，想看的小伙伴可以去YouTube</p>
+</li>
+<li><p>滴水逆向三期课程</p>
+<p>入门友好，很多东西讲的非常透彻，海东老师的功底也非常深厚，需要花时间慢慢消化</p>
+</li>
+</ul>
+<p>看完了上面的东西可以自己买点书来看，侯捷老师翻译的一些书、《C++ Primer》、《Windows核心编程》之类的都很好。</p>
+<h2 id="0x02：项目"><a href="#0x02：项目" class="headerlink" title="0x02：项目"></a>0x02：项目</h2><p>看完了上面的资料，可以写一些项目，如果没时间实现完，至少要知道核心代码的原理，下面是我搜集的一些项目和链接，如果你现在才大二或者更小，那么恭喜你，你还有很多时间写下面的项目，你如果能在大学阶段写完下面的东西，按照开发岗的条件要求自己，那么以后做二进制相关工作是非常非常非常有优势的，至少我所认识的大牛，基本上都是开发出身，或者有很强的编程功底，具体能不能学到东西，你试试就知道了。</p>
+<ul>
+<li>STL<ul>
+<li><a href="https://github.com/Alinshans/MyTinySTL" target="_blank" rel="noopener">https://github.com/Alinshans/MyTinySTL</a></li>
+</ul>
+</li>
+<li>内核<ul>
+<li><a href="https://github.com/ThunderJie/kernel" target="_blank" rel="noopener">https://github.com/ThunderJie/kernel</a></li>
+</ul>
+</li>
+<li>磁盘查看器<ul>
+<li><a href="https://bbs.pediy.com/thread-204845.htm" target="_blank" rel="noopener">https://bbs.pediy.com/thread-204845.htm</a></li>
+</ul>
+</li>
+<li>文件清理工具<ul>
+<li><a href="https://bbs.pediy.com/thread-204845.htm" target="_blank" rel="noopener">https://bbs.pediy.com/thread-204845.htm</a></li>
+</ul>
+</li>
+<li>PE解析工具<ul>
+<li><a href="https://bbs.pediy.com/thread-206060.htm" target="_blank" rel="noopener">https://bbs.pediy.com/thread-206060.htm</a></li>
+</ul>
+</li>
+<li>任务管理器 <ul>
+<li><a href="https://bbs.pediy.com/thread-205382.htm" target="_blank" rel="noopener">https://bbs.pediy.com/thread-205382.htm</a></li>
+</ul>
+</li>
+<li>杀毒软件<ul>
+<li><a href="https://bbs.pediy.com/thread-205765.htm" target="_blank" rel="noopener">https://bbs.pediy.com/thread-205765.htm</a></li>
+</ul>
+</li>
+<li>调试器<ul>
+<li><a href="https://www.zhihu.com/question/52553014" target="_blank" rel="noopener">https://www.zhihu.com/question/52553014</a></li>
+</ul>
+</li>
+<li>服务器框架<ul>
+<li><a href="https://www.bilibili.com/video/av53602631?from=search&amp;seid=9029288577396826503" target="_blank" rel="noopener">https://www.bilibili.com/video/av53602631?from=search&amp;seid=9029288577396826503</a></li>
+</ul>
+</li>
+</ul>
+<p>还有一些项目我没写进去，可以参考下面这个知乎问题</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">https://www.zhihu.com/question/29112393/answer/1692382930?utm_source=qq&amp;utm_medium=social&amp;utm_oi=980106412042633216</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>Programming</category>
+      </categories>
+      <tags>
+        <tag>学习路线</tag>
       </tags>
   </entry>
   <entry>
@@ -23,35 +90,40 @@
 <h2 id="符号"><a href="#符号" class="headerlink" title="符号"></a>符号</h2><p>windbg里面下载微软符号都需要梯子，我是这样设置的<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">SRV*C:\MyLocalSymbols*http://msdl.microsoft.com/download/symbols </span><br><span class="line">srv*C:\symbols_folder*http://msdl.microsoft.com/download/symbols</span><br><span class="line">SRV*c:\mysymbol* http://msdl.microsoft.com/download/symbols</span><br></pre></td></tr></table></figure></p>
 <p>如果符号没加载出来可以<code>!sym noisy</code>激活详细符号加载显示，然后再<code>.reload</code>重新加载看什么问题</p>
 <h2 id="断点"><a href="#断点" class="headerlink" title="断点"></a>断点</h2><p>下面记录一些常用断点命令</p>
-<ol>
-<li><p>硬件断点，最多下四个断点</p>
+<p>1.硬件断点，最多下四个断点</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ba e1 address</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>软件断点</p>
+<p>2.软件断点</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">bp address</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>条件断点</p>
-</li>
-</ol>
+<p>3.条件断点</p>
 <p>对寄存器进行监控，eax 等于0x41的时候断下<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ba e1 address &quot;.if @eax = 0x41  &#123;&#125; .else &#123;gc&#125;&quot;</span><br></pre></td></tr></table></figure></p>
 <p>打印一些数据，当在address断下的时候可以打印函数名和rax寄存器里面的内容<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">bp address &quot;.echo function name; dq rax; gc&quot;</span><br></pre></td></tr></table></figure></p>
 <p>如果需要指定当前线程中对函数下断点，可以用下面的例子指定当前线程<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ba e1 /t $thread xxx</span><br></pre></td></tr></table></figure></p>
-<h2 id="进程操作"><a href="#进程操作" class="headerlink" title="进程操作"></a>进程操作</h2><ol>
-<li><code>!process 0 0</code>显示进程列表<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1: kd&gt; !process 0 0</span><br><span class="line">**** NT ACTIVE PROCESS DUMP ****</span><br><span class="line">PROCESS ffff86851c08a300</span><br><span class="line">    SessionId: none  Cid: 0004    Peb: 00000000  ParentCid: 0000</span><br><span class="line">    DirBase: 001ad002  ObjectTable: ffffc78ec3004b80  HandleCount: 2457.</span><br><span class="line">    Image: System</span><br><span class="line"></span><br><span class="line">PROCESS ffff86851c12e080</span><br><span class="line">    SessionId: none  Cid: 00a0    Peb: 00000000  ParentCid: 0004</span><br><span class="line">    DirBase: 02d72002  ObjectTable: ffffc78ec3007380  HandleCount:   0.</span><br><span class="line">    Image: Registry</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
+<h2 id="修改数据"><a href="#修改数据" class="headerlink" title="修改数据"></a>修改数据</h2><p>1.修改寄存器命令，将eax置为1，如果要修改浮点寄存器，需要按格式修改，如下所示</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">r @eax=1</span><br><span class="line">r xmm0 = 1 1 1 1</span><br></pre></td></tr></table></figure>
+<p>2.修改内存命令，将内存为80505648的数据改为00001234</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ed 80505648 00001234</span><br></pre></td></tr></table></figure>
+<h2 id="进程操作"><a href="#进程操作" class="headerlink" title="进程操作"></a>进程操作</h2><h3 id="内核态"><a href="#内核态" class="headerlink" title="内核态"></a>内核态</h3><p>1.<code>!process 0 0</code>显示进程列表</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1: kd&gt; !process 0 0</span><br><span class="line">**** NT ACTIVE PROCESS DUMP ****</span><br><span class="line">PROCESS ffff86851c08a300</span><br><span class="line">    SessionId: none  Cid: 0004    Peb: 00000000  ParentCid: 0000</span><br><span class="line">    DirBase: 001ad002  ObjectTable: ffffc78ec3004b80  HandleCount: 2457.</span><br><span class="line">    Image: System</span><br><span class="line"></span><br><span class="line">PROCESS ffff86851c12e080</span><br><span class="line">    SessionId: none  Cid: 00a0    Peb: 00000000  ParentCid: 0004</span><br><span class="line">    DirBase: 02d72002  ObjectTable: ffffc78ec3007380  HandleCount:   0.</span><br><span class="line">    Image: Registry</span><br></pre></td></tr></table></figure>
 <p>后面加xxx.exe可以指定进程<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1: kd&gt; !process 0 0 smss.exe</span><br><span class="line">PROCESS ffff868520d36400</span><br><span class="line">    SessionId: none  Cid: 01a4    Peb: 2238d4d000  ParentCid: 0004</span><br><span class="line">    DirBase: 12a451002  ObjectTable: ffffc78ec3507480  HandleCount:  53.</span><br><span class="line">    Image: smss.exe</span><br></pre></td></tr></table></figure></p>
 <p>也可以根据PID直接搜索<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1: kd&gt; !process 470 0</span><br><span class="line">Searching for Process with Cid == 470</span><br><span class="line">PROCESS ffff868523618340</span><br><span class="line">    SessionId: 0  Cid: 0470    Peb: d294a3d000  ParentCid: 02bc</span><br><span class="line">    DirBase: 1b824002  ObjectTable: ffffc78ec70f7b40  HandleCount: 657.</span><br><span class="line">    Image: svchost.exe</span><br></pre></td></tr></table></figure></p>
-<ol start="2">
-<li><p>如果windbg正在调试内核，可以直接修改当前process调试ring3的进程，<code>.process</code>命令指定要用作进程上下文的进程，直接使用<code>.process</code>可显示当前进程的<code>EPROCESS</code>，下面展示了一次切换进程上下文的例子，将<code>0xffff86851c08a300</code>切换为了<code>ffff868520f77080</code>，这样就可以直接调ring3的进程，不过需要重新<code>g</code>跑一下</p>
+<p>2.如果windbg正在调试内核，可以直接修改当前process调试ring3的进程，<code>.process</code>命令指定要用作进程上下文的进程，直接使用<code>.process</code>可显示当前进程的<code>EPROCESS</code>，下面展示了一次切换进程上下文的例子，将<code>0xffff86851c08a300</code>切换为了<code>ffff868520f77080</code>，这样就可以直接调ring3的进程，不过需要重新<code>g</code>跑一下</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1: kd&gt; .process</span><br><span class="line">Implicit process is now ffff8685`1c08a300</span><br><span class="line">1: kd&gt; .process /i /p ffff8685`20f77080</span><br><span class="line">You need to continue execution (press &apos;g&apos; &lt;enter&gt;) for the context</span><br><span class="line">to be switched. When the debugger breaks in again, you will be in</span><br><span class="line">the new process context.</span><br><span class="line">1: kd&gt; g</span><br><span class="line">Break instruction exception - code 80000003 (first chance)</span><br><span class="line">nt!DbgBreakPointWithStatus:</span><br><span class="line">fffff805`0c27cb30 cc              int     3</span><br><span class="line">0: kd&gt; .process</span><br><span class="line">Implicit process is now ffff8685`20f77080</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>可以通过<code>!dml_proc</code>命令直接查看所有进程，非常方便</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1: kd&gt; !dml_proc</span><br><span class="line">Address           PID  Image file name</span><br><span class="line">ffff8685`1c08a300 4    System         </span><br><span class="line">ffff8685`1c12e080 a0   Registry       </span><br><span class="line">ffff8685`20d36400 1a4  smss.exe       </span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>可以通过<code>!dml_proc</code>命令直接查看所有进程，非常方便<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1: kd&gt; !dml_proc</span><br><span class="line">Address           PID  Image file name</span><br><span class="line">ffff8685`1c08a300 4    System         </span><br><span class="line">ffff8685`1c12e080 a0   Registry       </span><br><span class="line">ffff8685`20d36400 1a4  smss.exe       </span><br><span class="line">...</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
-<h2 id="查看句柄"><a href="#查看句柄" class="headerlink" title="查看句柄"></a>查看句柄</h2><p>可以通过<code>!handle</code>命令查看当前进程所有句柄，需要在内核调试器下才能看句柄信息<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1: kd&gt; !handle</span><br><span class="line"></span><br><span class="line">PROCESS ffff868523618340</span><br><span class="line">    SessionId: 0  Cid: 0470    Peb: d294a3d000  ParentCid: 02bc</span><br><span class="line">    DirBase: 1b824002  ObjectTable: ffffc78ec70f7b40  HandleCount: 657.</span><br><span class="line">    Image: svchost.exe</span><br><span class="line"></span><br><span class="line">Handle table at ffffc78ec70f7b40 with 657 entries in use</span><br><span class="line"></span><br><span class="line">0004: Object: ffff868521fda960  GrantedAccess: 001f0003 (Protected) (Inherit) Entry: ffffc78ec72a1010</span><br><span class="line">Object: ffff868521fda960  Type: (ffff86851c0a87a0) Event</span><br><span class="line">    ObjectHeader: ffff868521fda930 (new version)</span><br><span class="line">        HandleCount: 1  PointerCount: 32767</span><br><span class="line"></span><br><span class="line">0008: Object: ffff868521fda3e0  GrantedAccess: 001f0003 (Protected) (Inherit) Entry: ffffc78ec72a1020</span><br><span class="line">Object: ffff868521fda3e0  Type: (ffff86851c0a87a0) Event</span><br><span class="line">    ObjectHeader: ffff868521fda3b0 (new version)</span><br><span class="line">        HandleCount: 1  PointerCount: 32718</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<h3 id="用户态"><a href="#用户态" class="headerlink" title="用户态"></a>用户态</h3><p>1.<code>~</code> 显示所有线程简略信息， <code>~*</code> 显示所有线程详细信息，最左边有小点的就是当前线程</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">0:008&gt; ~</span><br><span class="line">   0  Id: d50c.6dcc Suspend: 1 Teb: 00000084`30e52000 Unfrozen</span><br><span class="line">   ...</span><br><span class="line">.  8  Id: d50c.d60 Suspend: 1 Teb: 00000084`30e62000 Unfrozen</span><br><span class="line">0:008&gt; ~*</span><br><span class="line">   0  Id: d50c.6dcc Suspend: 1 Teb: 00000084`30e52000 Unfrozen</span><br><span class="line">      Start: mstsc!WinMainCRTStartup (00007ff7`1f2e37c0)</span><br><span class="line">      Priority: 0  Priority class: 32  Affinity: fff</span><br><span class="line">   ...</span><br><span class="line">.  8  Id: d50c.d60 Suspend: 1 Teb: 00000084`30e62000 Unfrozen</span><br><span class="line">      Start: ntdll!DbgUiRemoteBreakin (00007ffd`8c01c840)</span><br><span class="line">      Priority: 0  Priority class: 32  Affinity: fff</span><br></pre></td></tr></table></figure>
+<p>显示当前线程</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">0:008&gt; ~.</span><br><span class="line">.  8  Id: d50c.d60 Suspend: 1 Teb: 00000084`30e62000 Unfrozen</span><br><span class="line">      Start: ntdll!DbgUiRemoteBreakin (00007ffd`8c01c840)</span><br><span class="line">      Priority: 0  Priority class: 32  Affinity: fff</span><br></pre></td></tr></table></figure>
+<h2 id="查看数据"><a href="#查看数据" class="headerlink" title="查看数据"></a>查看数据</h2><h3 id="查看句柄"><a href="#查看句柄" class="headerlink" title="查看句柄"></a>查看句柄</h3><p>可以通过<code>!handle</code>命令查看当前进程所有句柄，需要在内核调试器下才能看句柄信息<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1: kd&gt; !handle</span><br><span class="line"></span><br><span class="line">PROCESS ffff868523618340</span><br><span class="line">    SessionId: 0  Cid: 0470    Peb: d294a3d000  ParentCid: 02bc</span><br><span class="line">    DirBase: 1b824002  ObjectTable: ffffc78ec70f7b40  HandleCount: 657.</span><br><span class="line">    Image: svchost.exe</span><br><span class="line"></span><br><span class="line">Handle table at ffffc78ec70f7b40 with 657 entries in use</span><br><span class="line"></span><br><span class="line">0004: Object: ffff868521fda960  GrantedAccess: 001f0003 (Protected) (Inherit) Entry: ffffc78ec72a1010</span><br><span class="line">Object: ffff868521fda960  Type: (ffff86851c0a87a0) Event</span><br><span class="line">    ObjectHeader: ffff868521fda930 (new version)</span><br><span class="line">        HandleCount: 1  PointerCount: 32767</span><br><span class="line"></span><br><span class="line">0008: Object: ffff868521fda3e0  GrantedAccess: 001f0003 (Protected) (Inherit) Entry: ffffc78ec72a1020</span><br><span class="line">Object: ffff868521fda3e0  Type: (ffff86851c0a87a0) Event</span><br><span class="line">    ObjectHeader: ffff868521fda3b0 (new version)</span><br><span class="line">        HandleCount: 1  PointerCount: 32718</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
 <p>加上<code>/f</code>选项即可查看句柄详细信息，此功能大多用在查看驱动设备名<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1: kd&gt; !handle 0xa0 /f</span><br><span class="line"></span><br><span class="line">PROCESS ffff868523618340</span><br><span class="line">    SessionId: 0  Cid: 0470    Peb: d294a3d000  ParentCid: 02bc</span><br><span class="line">    DirBase: 1b824002  ObjectTable: ffffc78ec70f7b40  HandleCount: 657.</span><br><span class="line">    Image: svchost.exe</span><br><span class="line"></span><br><span class="line">Handle table at ffffc78ec70f7b40 with 657 entries in use</span><br><span class="line"></span><br><span class="line">00a0: Object: ffff868523605b80  GrantedAccess: 00000804 (Protected) (Audit) Entry: ffffc78ec72a1280</span><br><span class="line">Object: ffff868523605b80  Type: (ffff86851c1f56c0) EtwRegistration</span><br><span class="line">    ObjectHeader: ffff868523605b50 (new version)</span><br><span class="line">        HandleCount: 1  PointerCount: 1</span><br></pre></td></tr></table></figure></p>
+<p>2.查看浮点寄存器，如果直接用 <code>r xmm0</code> 查看寄存器会是科学计数，用下面指令就很方便了</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">0: kd&gt; .formats xmm0</span><br><span class="line">Evaluate expression:</span><br><span class="line">  Hex:     00000005`00000002</span><br><span class="line">  Decimal: 21474836482</span><br><span class="line">  Octal:   0000000000240000000002</span><br><span class="line">  Binary:  00000000 00000000 00000000 00000101 00000000 00000000 00000000 00000010</span><br><span class="line">  Chars:   ........</span><br><span class="line">  Time:    Mon Jan  1 08:35:47.483 1601 (UTC + 8:00)</span><br><span class="line">  Float:   low 2.8026e-045 high 7.00649e-045</span><br><span class="line">  Double:  1.061e-313</span><br></pre></td></tr></table></figure>
+<h2 id="插件"><a href="#插件" class="headerlink" title="插件"></a>插件</h2><p><code>chain</code> 可以查看Windbg此时已经加载的插件</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">0:000&gt; .chain</span><br><span class="line">Extension DLL search Path:</span><br><span class="line">    C:\Program Files\...</span><br><span class="line">Extension DLL chain:</span><br><span class="line">    dbghelp: image 10.0.20153.1000, API 10.0.6, </span><br><span class="line">        [path: C:\Program Files\WindowsApps\...]</span><br><span class="line">    ext: image 10.0.20153.1000, API 1.0.0, </span><br><span class="line">        [path: C:\Program Files\WindowsApps\...]</span><br><span class="line">    exts: image 10.0.20153.1000, API 1.0.0, </span><br><span class="line">        [path: C:\Program Files\WindowsApps\...]</span><br><span class="line">    uext: image 10.0.20153.1000, API 1.0.0, </span><br><span class="line">        [path: C:\Program Files\WindowsApps\...]</span><br><span class="line">    ntsdexts: image 10.0.20153.1000, API 1.0.0, </span><br><span class="line">        [path: C:\Program Files\WindowsApps\...]</span><br></pre></td></tr></table></figure>
+<p><code>.load</code> 可以加载插件，需要指定全部路径，下面是例子</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">0:000&gt; .load E:\..\segmentheap.dll</span><br><span class="line">0:000&gt; .chain // 检查是否成功加载插件</span><br><span class="line">Extension DLL search Path:</span><br><span class="line">    C:\Program Files\WindowsApps\...</span><br><span class="line">Extension DLL chain:</span><br><span class="line">    E:\..\segmentheap.dll: API 1.0.6, built Tue Dec  8 11:11:55 2020</span><br><span class="line">        [path: E:\..\segmentheap.dll]</span><br><span class="line">    dbghelp: image 10.0.20153.1000, API 10.0.6, </span><br><span class="line">        [path: C:\Program Files\WindowsApps\..\dbghelp.dll]</span><br><span class="line">    ext: image 10.0.20153.1000, API 1.0.0, </span><br><span class="line">        [path: C:\Program Files\WindowsApps\..\ext.dll]</span><br><span class="line">    exts: image 10.0.20153.1000, API 1.0.0, </span><br><span class="line">        [path: C:\Program Files\WindowsApps\..\exts.dll]</span><br><span class="line">    uext: image 10.0.20153.1000, API 1.0.0, </span><br><span class="line">        [path: C:\Program Files\WindowsApps\..\uext.dll]</span><br><span class="line">    ntsdexts: image 10.0.20153.1000, API 1.0.0, </span><br><span class="line">        [path: C:\Program Files\WindowsApps\..\ntsdexts.dll]</span><br><span class="line">0:000&gt; !heapinfo 250befe0000 // 成功加载</span><br><span class="line">Try to find Bucket Manager................................................................................</span><br><span class="line">Search 0x20 pages, FIND BUCKET HEADER FAILURE...CHECK HEAP ADDRESS...</span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
         <category>Reverse</category>
