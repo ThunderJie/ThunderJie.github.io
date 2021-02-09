@@ -112,36 +112,36 @@
 <meta name="keywords" content="OS Learning">
 <meta property="og:type" content="article">
 <meta property="og:title" content="简单内核实现笔记 part 2">
-<meta property="og:url" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/index.html">
+<meta property="og:url" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/index.html">
 <meta property="og:site_name" content="Thunder_J">
 <meta property="og:description" content="完善内核调用约定调用约定主要体现在以下三方面：  参数的传递方式，参数是存放在寄存器中还是栈中 参数的传递顺序，是从左到右传递还是从右到左传递 是调用者保存寄存器环境还是被调用者保存  有如下常见的调用约定，我们主要关注cdecl、stdcall、thiscall即可  cdecl是默认c的调用约定，调用者将所有参数从右向左入栈，被调用者清理参数所占栈空间，举个例子 12int subtract(">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/47.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/48.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/49.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/50.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/51.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/52.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/53.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/54.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/55.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/56.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/57.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/58.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/59.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/60.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/61.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/62.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/63.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/64.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/65.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/66.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/67.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/47.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/48.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/49.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/50.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/51.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/52.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/53.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/54.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/55.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/56.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/57.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/58.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/59.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/60.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/61.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/62.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/63.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/64.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/65.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/66.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/67.png">
 <meta property="og:updated_time" content="2020-06-18T03:13:32.915Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="简单内核实现笔记 part 2">
 <meta name="twitter:description" content="完善内核调用约定调用约定主要体现在以下三方面：  参数的传递方式，参数是存放在寄存器中还是栈中 参数的传递顺序，是从左到右传递还是从右到左传递 是调用者保存寄存器环境还是被调用者保存  有如下常见的调用约定，我们主要关注cdecl、stdcall、thiscall即可  cdecl是默认c的调用约定，调用者将所有参数从右向左入栈，被调用者清理参数所占栈空间，举个例子 12int subtract(">
-<meta name="twitter:image" content="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/47.png">
+<meta name="twitter:image" content="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/47.png">
 
 
 
@@ -150,7 +150,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/">
+  <link rel="canonical" href="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/">
 
 
 
@@ -357,7 +357,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/05/10/简单内核实现笔记-part-2/">
+    <link itemprop="mainEntityOfPage" href="https://thunderjie.github.io/2020/05/10/简单内核实现笔记-part-2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Thunder_J">

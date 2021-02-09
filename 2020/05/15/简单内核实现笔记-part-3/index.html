@@ -112,32 +112,32 @@
 <meta name="keywords" content="OS Learning">
 <meta property="og:type" content="article">
 <meta property="og:title" content="简单内核实现笔记-part-3">
-<meta property="og:url" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/index.html">
+<meta property="og:url" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/index.html">
 <meta property="og:site_name" content="Thunder_J">
 <meta property="og:description" content="进程与线程线程和进程的概念不用多说大家肯定都比较熟悉，线程是具有能动性、执行力、独立性的代码块。进程 = 线程+资源。那么下面代码中你能区别普通函数和线程函数的区别么？我们知道普通的函数之间发生函数调用的时候，要进行压栈的一系列操作，然后调用，它需要依赖程序上下文的环境。而线程函数则是自己提供一套上下文环境，使其更加具有独立性的在处理器上执行。二者的区别也主要是上下文环境。 12345678910">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/68.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/69.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/70.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/71.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/72.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/73.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/74.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/75.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/76.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/77.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/78.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/79.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/80.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/81.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/82.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/83.png">
-<meta property="og:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/84.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/68.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/69.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/70.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/71.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/72.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/73.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/74.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/75.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/76.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/77.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/78.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/79.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/80.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/81.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/82.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/83.png">
+<meta property="og:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/84.png">
 <meta property="og:updated_time" content="2020-06-18T03:11:34.653Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="简单内核实现笔记-part-3">
 <meta name="twitter:description" content="进程与线程线程和进程的概念不用多说大家肯定都比较熟悉，线程是具有能动性、执行力、独立性的代码块。进程 = 线程+资源。那么下面代码中你能区别普通函数和线程函数的区别么？我们知道普通的函数之间发生函数调用的时候，要进行压栈的一系列操作，然后调用，它需要依赖程序上下文的环境。而线程函数则是自己提供一套上下文环境，使其更加具有独立性的在处理器上执行。二者的区别也主要是上下文环境。 12345678910">
-<meta name="twitter:image" content="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/68.png">
+<meta name="twitter:image" content="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/68.png">
 
 
 
@@ -146,7 +146,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/">
+  <link rel="canonical" href="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/">
 
 
 
@@ -353,7 +353,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/05/15/简单内核实现笔记-part-3/">
+    <link itemprop="mainEntityOfPage" href="https://thunderjie.github.io/2020/05/15/简单内核实现笔记-part-3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Thunder_J">
